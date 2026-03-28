@@ -1,33 +1,33 @@
-name: Celsius Mage Mastering Engine
+name: Celsius Mage Engine
 on:
   repository_dispatch:
     types: [ignite_mastering]
 
 jobs:
-  dsp_process:
+  mastering:
     runs-on: ubuntu-latest
     steps:
-      - name: System Checkout
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Initialize Audio Environment
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install System Encoders
+      - name: Install Dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub
 
-      - name: Execute PRCE Mastering Chain
+      - name: Run Engine
         env:
           WE_LINK: ${{ github.event.client_payload.we_link }}
           ARTIST: ${{ github.event.client_payload.artist }}
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Post-Back Mastered Render
+      - name: Final Dispatch to Website
         if: success()
         run: |
           curl -L -A "Mozilla/5.0" -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \

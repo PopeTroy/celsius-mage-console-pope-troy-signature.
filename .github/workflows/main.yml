@@ -1,37 +1,24 @@
-name: CELSIUS MAGE CONSOLE ENGINE
+name: Celsius Mage Engine
 on:
   repository_dispatch:
-    types: [ignite_mastering]
+    types: [ignite_mastering] # THIS MUST MATCH THE PHP 'event_type'
 
 jobs:
-  master:
+  mastering:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Setup Python
         uses: actions/setup-python@v4
-        with: { python-version: '3.10' }
-      
-      - name: Install FFmpeg
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        with:
+          python-version: '3.10'
 
-      - name: Install Requirements
-        run: pip install -r requirements.txt
-
-      - name: Run Mage Console
+      - name: Run Engine
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: |
-          python mastering_logic.py \
-          "${{ github.event.client_payload.artist }}" \
-          "${{ github.event.client_payload.song }}" \
-          "${{ github.event.client_payload.instruments }}" \
-          "${{ github.event.client_payload.goals }}" \
-          "${{ github.event.client_payload.song_url }}" \
-          "${{ github.event.client_payload.ref_url }}"
-
-      - name: Upload Winner Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ github.event.client_payload.song }}_WINNER
-          path: ./*_WINNER.wav
+          WE_LINK: ${{ github.event.client_payload.we_link }}
+          ARTIST: ${{ github.event.client_payload.artist }}
+          SONG: ${{ github.event.client_payload.song }}
+        run: python mastering_logic.py

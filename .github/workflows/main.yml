@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install System Encoders & DSP Libraries
+      - name: Install Encoders & DSP Libraries
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub
@@ -30,7 +30,8 @@ jobs:
       - name: Post-Back Mastered Render
         if: success()
         run: |
-          curl -S -f -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          # The -L follows redirects and -v provides deep logs if this fails again
+          curl -v -L -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
           -F "action=celsius_receive_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \

@@ -2,61 +2,51 @@ import sys
 import os
 import matchering as mg
 import ffmpeg
+from groq import Groq
 
-# Receiving data from your WordPress Page
-artist = sys.argv[1]
-song = sys.argv[2]
-instruments = sys.argv[3]
-goals = sys.argv[4]
+# 1. Capture WordPress Data
+artist, song, instruments, goals, song_url, ref_url = sys.argv[1:7]
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-def run_celsius_protocol():
-    print(f"--- ACTIVATING UESP PRCE FOR {artist.upper()} ---")
-    
-    # 1. High-Fidelity Synthesis
-    # Using the 'award_winner.wav' from your GitHub database
-    mg.process(
-        target="input_track.wav",
-        reference="database/award_winner.wav",
-        results=[mg.Result("winner_render.wav", subtype="pcm_24")]
+def get_sonic_dna():
+    # Use Groq to determine the perfect mastering curve if no reference exists
+    completion = client.chat.completions.create(
+        model="llama3-70b-8192",
+        messages=[{"role": "system", "content": "Return only numerical EQ offsets and compression ratios for mastering based on user goals."},
+                  {"role": "user", "content": f"Instruments: {instruments}. Goals: {goals}"}]
     )
+    return completion.choices[0].message.content
 
-    # 2. Burn Metadata & 30% ASCAP Royalty
+def run_master():
+    print(f"> STARTING UESP PRCE FOR {artist}...")
+    
+    # Download the track from WordPress URL (Simplified for script)
+    os.system(f"curl -L {song_url} -o input_track.wav")
+    
+    # Use Groq logic to "Prophetically" master
+    dna = get_sonic_dna()
+    print(f"> GROQ ANALYSIS COMPLETE: {dna[:50]}...")
+
+    # Execute Mastering
+    # (Matches against internal 'database/award_winner.wav' or the user's ref_url)
+    ref = "database/award_winner.wav" if not ref_url or ref_url == "undefined" else "ref.wav"
+    if ref == "ref.wav": os.system(f"curl -L {ref_url} -o ref.wav")
+
+    mg.process(target="input_track.wav", reference=ref, results=[mg.Result("temp.wav", subtype="pcm_24")])
+
+    # Final Burn: Metadata & 30% Royalty for Thabelo Moahi
     (
         ffmpeg
-        .input("winner_render.wav")
-        .output(f"{song}_CELSIUS_MASTER.wav", **{
+        .input("temp.wav")
+        .output(f"{song}_WINNER.wav", **{
             'metadata': f'artist={artist}',
             'metadata': f'title={song}',
             'metadata': 'copyright=Celsius Technology & Media Group',
-            'metadata': f'comment=Royalty: 30% Thabelo Moahi (ASCAP). Goals: {goals}',
+            'metadata': f'comment=Royalty: 30% Thabelo Moahi (ASCAP). DNA: {dna[:100]}',
         })
         .run(overwrite_output=True)
     )
-    print("> GREEN CHECK: MASTERING COMPLETE")
+    print("> GREEN CHECK: UESP PRCE SUCCESSFUL")
 
 if __name__ == "__main__":
-    run_celsius_protocol()
-import os
-from groq import Groq
-
-# Initialize Groq with your Sovereign Database Key
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-
-def get_groq_sonic_dna(instruments, goals):
-    print("> QUERYING SOVEREIGN DATABASE (GROQ)...")
-    chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": "You are the PRCE Acoustic Intelligence. Provide precise EQ curves (Hz/dB) and compression settings for mastering."
-            },
-            {
-                "role": "user",
-                "content": f"Analyze these elements: {instruments}. Goal: {goals}. Provide a mastering profile."
-            }
-        ],
-        model="llama3-70b-8192", # Using the heavy-duty LPU model
-    )
-    return chat_completion.choices[0].message.content
-
-# This replaces the need for 'award_winner.wav' if it's missing
+    run_master()

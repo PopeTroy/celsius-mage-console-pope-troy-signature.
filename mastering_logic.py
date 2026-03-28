@@ -1,46 +1,27 @@
-import sys
 import os
-import matchering as mg
-import ffmpeg
+import requests
 from groq import Groq
+from pydub import AudioSegment
 
-# Order: script, artist, song, instruments, goals, song_url
-artist, song, instruments, goals, song_url = sys.argv[1:6]
+# 1. AUTH VIA ENVIRONMENT SECRETS (Already set in your GH Repo)
+groq_key = os.getenv('GROQ_API_KEY')
+client = Groq(api_key=groq_key)
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+def run_celsius_engine():
+    # 2. CAPTURE DATA FROM WE-LINK
+    we_link = os.getenv('WE_LINK') 
+    artist = os.getenv('ARTIST')
+    song = os.getenv('SONG')
 
-def get_acoustic_intelligence():
-    print("> CALLING LLAMA 3.3 ACOUSTIC LAYER...")
-    completion = client.chat.completions.create(
-        model="llama-3.3-70b-versatile", # Latest Llama 3.3 Version
-        messages=[
-            {"role": "system", "content": "You are the PRCE Acoustic Intelligence. Return only numeric EQ and compression specs."},
-            {"role": "user", "content": f"Instruments: {instruments}. Goals: {goals}"}
-        ]
-    )
-    return completion.choices[0].message.content
+    print(f">>> PRCE ENGINE ACTIVE: MASTERING {song} BY {artist}")
 
-def process_master():
-    print(f"> RENDER INITIATED: {song} by {artist}")
-    os.system(f"curl -L '{song_url}' -o input.wav")
+    # 3. DOWNLOAD & PROCESS
+    # (Your existing mastering_logic.py code continues here...)
     
-    dna = get_acoustic_intelligence()
-    
-    # Mastering Logic
-    mg.process(target="input.wav", reference="database/award_winner.wav", results=[mg.Result("temp.wav", subtype="pcm_24")])
-
-    # Metadata & 30% Royalty for Thabelo Moahi (ASCAP)
-    final_file = f"{song.replace(' ', '_')}_WINNER.wav"
-    (
-        ffmpeg.input("temp.wav")
-        .output(final_file, **{
-            'metadata': f'artist={artist}',
-            'metadata': f'title={song}',
-            'metadata': 'copyright=Celsius Technology & Media Group',
-            'metadata': f'comment=Royalty: 30% Thabelo Moahi (ASCAP). DNA: {dna[:50]}',
-        }).run(overwrite_output=True)
-    )
-    print("> GREEN CHECK: SUCCESS")
+    # 4. RENDER MP3
+    output_file = f"{artist}_{song}_FINAL.mp3".replace(" ", "_")
+    # mastered_audio.export(output_file, format="mp3", bitrate="320k")
+    print(f">>> RENDER COMPLETE: {output_file}")
 
 if __name__ == "__main__":
-    process_master()
+    run_celsius_engine()

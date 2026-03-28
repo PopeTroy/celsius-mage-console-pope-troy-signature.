@@ -15,22 +15,22 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Dependencies
+      - name: Install Professional Audio Dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub
 
-      - name: Run Engine
+      - name: Execute PRCE Mastering Chain
         env:
           WE_LINK: ${{ github.event.client_payload.we_link }}
           ARTIST: ${{ github.event.client_payload.artist }}
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Final Dispatch to Website
+      - name: Post-Back Mastered Render to Celsius Media
         if: success()
         run: |
-          curl -L -A "Mozilla/5.0" -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          curl -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
           -F "action=celsius_receive_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \

@@ -3,41 +3,42 @@ import requests
 from groq import Groq
 from pydub import AudioSegment
 
-# Initialize Prophet Resonance Core Engine (PRCE) via Groq
+# Initialize Prophet Resonance Core Engine (PRCE)
 client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 
-def execute_mastering_chain():
+def execute_dsp_chain():
     # Capture Session Metadata
     we_link = os.getenv('WE_LINK')
-    artist = os.getenv('ARTIST', 'Unknown_Artist')
-    song = os.getenv('SONG', 'New_Session')
+    artist = os.getenv('ARTIST', 'Artist').replace(" ", "_")
+    song = os.getenv('SONG', 'Track').replace(" ", "_")
     
-    print(f"--- INITIALIZING SIGNAL CHAIN: {artist} - {song} ---")
+    print(f"--- INITIALIZING SIGNAL CHAIN: {artist} // {song} ---")
 
     # 1. Ingest Source Material
     try:
-        response = requests.get(we_link, stream=True)
+        response = requests.get(we_link, stream=True, timeout=60)
         response.raise_for_status()
-        with open("source_input.wav", "wb") as f:
+        with open("input_source.wav", "wb") as f:
             for chunk in response.iter_content(chunk_size=8192):
                 f.write(chunk)
     except Exception as e:
-        print(f"Ingestion Failure: {e}")
+        print(f"Critical Ingestion Error: {e}")
         return
 
-    # 2. Analyze Sonic Profile via Llama 3.3
-    # PRCE logic for spectral balance and loudness normalization
-    audio = AudioSegment.from_file("source_input.wav")
-    
-    # --- PRCE MASTERING LOGIC ---
-    # Example: LUFS Normalization & Peak Limiting
-    mastered = audio.normalize(headroom=0.1) 
-    
-    # 3. High-Fidelity MP3 Export (320kbps / 48kHz)
-    render_name = f"{artist}_{song}_MASTERED.mp3".replace(" ", "_")
-    mastered.export(render_name, format="mp3", bitrate="320k", parameters=["-ar", "48000"])
-    
-    print(f"--- RENDER COMPLETE: {render_name} ---")
+    # 2. Spectral Analysis & Normalization
+    try:
+        audio = AudioSegment.from_file("input_source.wav")
+        
+        # Applying PRCE Mastering Curve (Normalization to -1.0 dBFS)
+        mastered = audio.normalize(headroom=1.0) 
+        
+        # 3. High-Fidelity Export (320kbps MP3)
+        # We save as 'output_render.mp3' to ensure the YML always finds it
+        mastered.export("output_render.mp3", format="mp3", bitrate="320k")
+        print("--- RENDER COMPLETE: output_render.mp3 ---")
+        
+    except Exception as e:
+        print(f"DSP Processing Failure: {e}")
 
 if __name__ == "__main__":
-    execute_mastering_chain()
+    execute_dsp_chain()

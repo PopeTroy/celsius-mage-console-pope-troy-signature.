@@ -3,41 +3,30 @@ import requests
 import sys
 from pydub import AudioSegment
 
-def download_file_from_google_drive(url, destination):
+def download_asset(url, destination):
     def get_confirm_token(response):
         for key, value in response.cookies.items():
             if key.startswith('download_warning'):
                 return value
         return None
 
-    def save_response_content(response, destination):
-        CHUNK_SIZE = 32768
+    def save_content(response, destination):
         with open(destination, "wb") as f:
-            for chunk in response.iter_content(CHUNK_SIZE):
-                if chunk: # filter out keep-alive new chunks
-                    f.write(chunk)
+            for chunk in response.iter_content(32768):
+                if chunk: f.write(chunk)
 
-    # Convert standard link to direct download link
     if 'drive.google.com' in url:
-        if '/file/d/' in url:
-            file_id = url.split('/file/d/')[1].split('/')[0]
-        else:
-            file_id = url.split('id=')[1].split('&')[0]
-        
+        file_id = url.split('/file/d/')[1].split('/')[0] if '/file/d/' in url else url.split('id=')[1].split('&')[0]
         direct_url = "https://docs.google.com/uc?export=download"
         session = requests.Session()
         response = session.get(direct_url, params={'id': file_id}, stream=True)
         token = get_confirm_token(response)
-
         if token:
-            params = {'id': file_id, 'confirm': token}
-            response = session.get(direct_url, params=params, stream=True)
-        
-        save_response_content(response, destination)
+            response = session.get(direct_url, params={'id': file_id, 'confirm': token}, stream=True)
+        save_content(response, destination)
     else:
-        # Standard download for non-Drive links
         response = requests.get(url, stream=True)
-        save_response_content(response, destination)
+        save_content(response, destination)
 
 def execute_signal_chain():
     we_link = os.getenv('WE_LINK')
@@ -47,19 +36,18 @@ def execute_signal_chain():
     print(f"--- INGESTING SOURCE: {artist} // {song} ---")
 
     try:
-        download_file_from_google_drive(we_link, "raw_input.wav")
+        download_asset(we_link, "raw_input.wav")
         
-        # Verify if the file is actually audio or just HTML error text
+        # Verify Bitstream Integrity
         with open("raw_input.wav", "rb") as f:
             header = f.read(4)
-            if header != b'RIFF' and header != b'ID3\x03' and header != b'\xff\xfb':
-                print(">>> ERROR: INGESTED DATA IS NOT A VALID AUDIO BITSTREAM.")
-                print(">>> ENSURE GOOGLE DRIVE LINK IS SET TO 'ANYONE WITH THE LINK'.")
+            if header not in [b'RIFF', b'ID3\x03', b'\xff\xfb']:
+                print(">>> ERROR: INVALID AUDIO BITSTREAM (LINK MAY BE PRIVATE).")
                 sys.exit(1)
 
         print(">>> SOURCE SIGNAL VERIFIED.")
 
-        # 2. DSP Mastering Chain
+        # DSP Mastering Chain
         audio = AudioSegment.from_file("raw_input.wav")
         mastered = audio.normalize(headroom=0.1) 
         

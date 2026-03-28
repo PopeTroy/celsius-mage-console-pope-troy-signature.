@@ -18,24 +18,18 @@ jobs:
       - name: Install System Encoders & DSP Libraries
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          python -m pip install --upgrade pip
-          pip install requests groq pydub
+          pip install requests pydub
 
       - name: Execute PRCE Mastering Chain
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           WE_LINK: ${{ github.event.client_payload.we_link }}
           ARTIST: ${{ github.event.client_payload.artist }}
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Validate Render & Post-Back
+      - name: Post-Back Mastered Render
         if: success()
         run: |
-          echo "Verifying local storage..."
-          ls -lh
-          
-          # Posting the signal back to the Celsius Media endpoint
           curl -S -f -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
           -F "action=celsius_receive_master" \
           -F "master_file=@output_render.mp3" \

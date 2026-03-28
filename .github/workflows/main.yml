@@ -7,7 +7,7 @@ jobs:
   dsp_process:
     runs-on: ubuntu-latest
     steps:
-      - name: Session Checkout
+      - name: System Checkout
         uses: actions/checkout@v4
 
       - name: Initialize Audio Environment
@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Encoders & DSP Libraries
+      - name: Install System Encoders
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub
@@ -30,8 +30,7 @@ jobs:
       - name: Post-Back Mastered Render
         if: success()
         run: |
-          # The -L follows redirects and -v provides deep logs if this fails again
-          curl -v -L -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          curl -L -A "Mozilla/5.0" -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
           -F "action=celsius_receive_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \

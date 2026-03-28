@@ -18,6 +18,7 @@ jobs:
       - name: Install Professional Audio Dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip
           pip install requests groq pydub
 
       - name: Execute PRCE Mastering Chain
@@ -29,9 +30,11 @@ jobs:
         run: python mastering_logic.py
 
       - name: Post-Back Mastered Render to Celsius Media
+        if: success()
         run: |
           # Sending the explicit render file back to the WordPress endpoint
-          curl -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          # Using -S to show errors and -f to fail on server errors
+          curl -S -f -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
           -F "action=celsius_receive_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \

@@ -7,15 +7,15 @@ jobs:
   dsp_process:
     runs-on: ubuntu-latest
     steps:
-      - name: System Checkout
+      - name: Session Checkout
         uses: actions/checkout@v4
 
-      - name: Initialize Python Environment
+      - name: Initialize Audio Environment
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install Professional Audio Dependencies
+      - name: Install System Encoders & DSP Libraries
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
@@ -29,11 +29,13 @@ jobs:
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Post-Back Mastered Render to Celsius Media
+      - name: Validate Render & Post-Back
         if: success()
         run: |
-          # Sending the explicit render file back to the WordPress endpoint
-          # Using -S to show errors and -f to fail on server errors
+          echo "Verifying local storage..."
+          ls -lh
+          
+          # Posting the signal back to the Celsius Media endpoint
           curl -S -f -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
           -F "action=celsius_receive_master" \
           -F "master_file=@output_render.mp3" \

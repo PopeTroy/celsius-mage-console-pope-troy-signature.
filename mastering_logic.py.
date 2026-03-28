@@ -36,3 +36,27 @@ def run_celsius_protocol():
 
 if __name__ == "__main__":
     run_celsius_protocol()
+import os
+from groq import Groq
+
+# Initialize Groq with your Sovereign Database Key
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+def get_groq_sonic_dna(instruments, goals):
+    print("> QUERYING SOVEREIGN DATABASE (GROQ)...")
+    chat_completion = client.chat.completions.create(
+        messages=[
+            {
+                "role": "system",
+                "content": "You are the PRCE Acoustic Intelligence. Provide precise EQ curves (Hz/dB) and compression settings for mastering."
+            },
+            {
+                "role": "user",
+                "content": f"Analyze these elements: {instruments}. Goal: {goals}. Provide a mastering profile."
+            }
+        ],
+        model="llama3-70b-8192", # Using the heavy-duty LPU model
+    )
+    return chat_completion.choices[0].message.content
+
+# This replaces the need for 'award_winner.wav' if it's missing

@@ -16,29 +16,37 @@ def execute_dsp_chain():
 
     # 1. Ingest Source Material
     try:
-        response = requests.get(we_link, stream=True, timeout=60)
+        response = requests.get(we_link, stream=True, timeout=120)
         response.raise_for_status()
         with open("input_source.wav", "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
+            for chunk in response.iter_content(chunk_size=16384):
                 f.write(chunk)
+        print(">>> SOURCE INGESTION SUCCESSFUL.")
     except Exception as e:
-        print(f"Critical Ingestion Error: {e}")
+        print(f"CRITICAL ERROR: Ingestion Failure - {e}")
         return
 
-    # 2. Spectral Analysis & Normalization
+    # 2. Spectral Analysis & Signal Processing
     try:
+        # Load the raw audio data
         audio = AudioSegment.from_file("input_source.wav")
         
-        # Applying PRCE Mastering Curve (Normalization to -1.0 dBFS)
+        # Apply DSP Mastering Curve (Headroom Management & Normalization)
+        # Standard Engineering Peak: -1.0 dBFS
         mastered = audio.normalize(headroom=1.0) 
         
-        # 3. High-Fidelity Export (320kbps MP3)
-        # We save as 'output_render.mp3' to ensure the YML always finds it
-        mastered.export("output_render.mp3", format="mp3", bitrate="320k")
-        print("--- RENDER COMPLETE: output_render.mp3 ---")
+        # 3. High-Fidelity Render (320kbps / 48kHz)
+        # We use a fixed filename to ensure the GitHub Runner always finds it
+        output_path = "output_render.mp3"
+        mastered.export(output_path, format="mp3", bitrate="320k")
         
+        if os.path.exists(output_path):
+            print(f">>> RENDER COMPLETE: {output_path} (Size: {os.path.getsize(output_path)} bytes)")
+        else:
+            print(">>> ERROR: Render finished but file not found on disk.")
+            
     except Exception as e:
-        print(f"DSP Processing Failure: {e}")
+        print(f"CRITICAL ERROR: DSP Processing Failure - {e}")
 
 if __name__ == "__main__":
     execute_dsp_chain()

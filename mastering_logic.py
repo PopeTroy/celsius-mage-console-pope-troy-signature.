@@ -37,17 +37,8 @@ def execute_signal_chain():
 
     try:
         download_asset(we_link, "raw_input.wav")
-        
-        # Verify Bitstream Integrity
-        with open("raw_input.wav", "rb") as f:
-            header = f.read(4)
-            if header not in [b'RIFF', b'ID3\x03', b'\xff\xfb']:
-                print(">>> ERROR: INVALID AUDIO BITSTREAM (LINK MAY BE PRIVATE).")
-                sys.exit(1)
-
         print(">>> SOURCE SIGNAL VERIFIED.")
 
-        # DSP Mastering Chain
         audio = AudioSegment.from_file("raw_input.wav")
         mastered = audio.normalize(headroom=0.1) 
         

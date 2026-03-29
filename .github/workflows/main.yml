@@ -7,15 +7,15 @@ jobs:
   mastering:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: System Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install Professional Audio Dependencies
+      - name: Install Encoders & DSP Libraries
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub
@@ -27,10 +27,10 @@ jobs:
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Post-Back Mastered Render to Celsius Media
+      - name: Post-Back Signal to Registry
         if: success()
         run: |
-          curl -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          curl -L -A "Mozilla/5.0" -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
           -F "action=celsius_receive_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \

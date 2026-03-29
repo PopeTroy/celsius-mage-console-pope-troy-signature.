@@ -1,4 +1,4 @@
-name: Celsius Mage - Interactive Mastering
+name: Celsius Mage - Interactive Engine
 on:
   repository_dispatch:
     types: [ignite_diagnostic, ignite_mastering]
@@ -7,30 +7,24 @@ jobs:
   engine:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout Repository
         uses: actions/checkout@v4
-      - name: Setup Python
+
+      - name: Setup Python 3.10
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Install Acoustic Tools
+
+      - name: Install Mastering Tools
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub yt-dlp
-      - name: Execute Groq Logic
+
+      - name: Execute PRCE V12 Logic
         env:
           MAGE_MODE: ${{ github.event.event_type == 'ignite_mastering' && 'master' || 'diagnostic' }}
           WE_LINK: ${{ github.event.client_payload.we_link }}
           ARTIST: ${{ github.event.client_payload.artist }}
           SONG: ${{ github.event.client_payload.song }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          WP_URL: "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php"
         run: python mastering_logic.py
-      - name: Return File to Super Circuit
-        if: github.event.event_type == 'ignite_mastering'
-        run: |
-          curl -L -X POST "${{ env.WP_URL }}" \
-          -F "action=celsius_capture_master" \
-          -F "master_file=@output_render.mp3" \
-          -F "artist=${{ env.ARTIST }}" \
-          -F "song=${{ env.SONG }}"

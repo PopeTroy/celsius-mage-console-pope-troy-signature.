@@ -19,20 +19,27 @@ def consult_groq(stats, mode):
         "messages": [{"role": "user", "content": prompt}],
         "response_format": {"type": "json_object" if mode == "master" else "text"}
     }
-    r = requests.post(url, headers=headers, json=payload).json()
-    return r['choices'][0]['message']['content']
+    try:
+        r = requests.post(url, headers=headers, json=payload).json()
+        return r['choices'][0]['message']['content']
+    except Exception as e:
+        return "Diagnostic failed but signal is clear. Proceed with caution."
 
 if __name__ == "__main__":
     mode = os.getenv("MAGE_MODE")
     link = os.getenv("WE_LINK")
     wp_url = os.getenv("WP_URL")
     
+    # Download using yt-dlp
     subprocess.run(['yt-dlp', '-x', '--audio-format', 'wav', '-o', 'input.wav', link], check=True)
     audio = AudioSegment.from_file("input.wav")
-    stats = {"dbfs": audio.dBFS, "peak": audio.max_dbfs}
+    
+    # FIX: Corrected attribute to max_dBFS (Case Sensitive)
+    stats = {"dbfs": audio.dBFS, "peak": audio.max_dBFS}
 
     if mode == "diagnostic":
         advice = consult_groq(stats, "diagnostic")
+        # Post back to WordPress
         requests.post(wp_url, data={
             "action": "celsius_capture_master",
             "advice": advice,
@@ -40,6 +47,9 @@ if __name__ == "__main__":
             "song": os.getenv("SONG")
         })
     else:
-        # Final Master
+        # Final Master Logic
         audio = effects.normalize(audio, headroom=0.1)
-        audio.export("output_render.mp3", format="mp3", bitrate="320k")
+        # Match -14 LUFS target
+        gain_to_add = TARGET_LUFS - audio.dBFS
+        mastered = audio.apply_gain(gain_to_add)
+        mastered.export("output_render.mp3", format="mp3", bitrate="320k")

@@ -23,36 +23,33 @@ def consult_groq(stats, mode):
         r = requests.post(url, headers=headers, json=payload).json()
         return r['choices'][0]['message']['content']
     except Exception:
-        return "Mix analysis complete. Signal is stable. Proceed to master."
+        return "Signal analysis successful. Proceeding with PRCE V12 standards."
 
 if __name__ == "__main__":
     mode = os.getenv("MAGE_MODE")
     link = os.getenv("WE_LINK")
-    wp_url = os.getenv("WP_URL")
+    # THE NEW SECRET ENTRANCE
+    wp_url = "https://celsiusmediagroup.co.za/wp-json/celsius/v1/mage"
     art = os.getenv("ARTIST")
     sng = os.getenv("SONG")
     
-    print(f"> STARTING {mode.upper()} PHASE FOR {art} - {sng}")
-    
-    # Download
     subprocess.run(['yt-dlp', '-x', '--audio-format', 'wav', '-o', 'input.wav', link], check=True)
     audio = AudioSegment.from_file("input.wav")
     stats = {"dbfs": audio.dBFS, "peak": audio.max_dBFS}
 
     if mode == "diagnostic":
         advice = consult_groq(stats, "diagnostic")
-        print(f"> SENDING ADVICE TO: {wp_url}")
-        r = requests.post(wp_url, data={
-            "action": "celsius_capture_master",
+        requests.post(wp_url, data={
             "advice": advice,
             "artist": art,
             "song": sng
         })
-        print(f"> WP RESPONSE: {r.status_code}")
     else:
-        # Final Master
         audio = effects.normalize(audio, headroom=0.1)
         gain_to_add = TARGET_LUFS - audio.dBFS
         mastered = audio.apply_gain(gain_to_add)
         mastered.export("output_render.mp3", format="mp3", bitrate="320k")
-        print("> MASTER FILE RENDERED LOCALLY.")
+        
+        # Send File to the new endpoint
+        with open("output_render.mp3", "rb") as f:
+            requests.post(wp_url, files={"master_file": f}, data={"artist": art, "song": sng})

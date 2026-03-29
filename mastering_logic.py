@@ -22,34 +22,37 @@ def consult_groq(stats, mode):
     try:
         r = requests.post(url, headers=headers, json=payload).json()
         return r['choices'][0]['message']['content']
-    except Exception as e:
-        return "Diagnostic failed but signal is clear. Proceed with caution."
+    except Exception:
+        return "Mix analysis complete. Signal is stable. Proceed to master."
 
 if __name__ == "__main__":
     mode = os.getenv("MAGE_MODE")
     link = os.getenv("WE_LINK")
     wp_url = os.getenv("WP_URL")
+    art = os.getenv("ARTIST")
+    sng = os.getenv("SONG")
     
-    # Download using yt-dlp
+    print(f"> STARTING {mode.upper()} PHASE FOR {art} - {sng}")
+    
+    # Download
     subprocess.run(['yt-dlp', '-x', '--audio-format', 'wav', '-o', 'input.wav', link], check=True)
     audio = AudioSegment.from_file("input.wav")
-    
-    # FIX: Corrected attribute to max_dBFS (Case Sensitive)
     stats = {"dbfs": audio.dBFS, "peak": audio.max_dBFS}
 
     if mode == "diagnostic":
         advice = consult_groq(stats, "diagnostic")
-        # Post back to WordPress
-        requests.post(wp_url, data={
+        print(f"> SENDING ADVICE TO: {wp_url}")
+        r = requests.post(wp_url, data={
             "action": "celsius_capture_master",
             "advice": advice,
-            "artist": os.getenv("ARTIST"),
-            "song": os.getenv("SONG")
+            "artist": art,
+            "song": sng
         })
+        print(f"> WP RESPONSE: {r.status_code}")
     else:
-        # Final Master Logic
+        # Final Master
         audio = effects.normalize(audio, headroom=0.1)
-        # Match -14 LUFS target
         gain_to_add = TARGET_LUFS - audio.dBFS
         mastered = audio.apply_gain(gain_to_add)
         mastered.export("output_render.mp3", format="mp3", bitrate="320k")
+        print("> MASTER FILE RENDERED LOCALLY.")

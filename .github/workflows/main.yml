@@ -1,41 +1,32 @@
-name: Celsius Mage - King of Engines (Groq Powered)
+name: Celsius Mage - Interactive Engine
 on:
   repository_dispatch:
-    types: [ignite_mastering]
+    types: [ignite_diagnostic, ignite_mastering]
 
 jobs:
-  mastering:
+  process:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install Tools
+      - name: Setup Tools
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub yt-dlp
-
-      - name: Execute Expert Mastering
+      - name: Run Engine
         env:
+          MAGE_MODE: ${{ github.event.event_type == 'ignite_mastering' && 'master' || 'diagnostic' }}
           WE_LINK: ${{ github.event.client_payload.we_link }}
           ARTIST: ${{ github.event.client_payload.artist }}
           SONG: ${{ github.event.client_payload.song }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          WP_URL: "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php"
         run: python mastering_logic.py
-
-      - name: Force Mega Circuit Handshake
-        if: success()
+      - name: Return Mastered File
+        if: github.event.event_type == 'ignite_mastering'
         run: |
-          curl -L -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
-          -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+          curl -L -X POST "${{ env.WP_URL }}" \
           -F "action=celsius_capture_master" \
           -F "master_file=@output_render.mp3" \
-          -F "artist=${{ github.event.client_payload.artist }}" \
-          -F "song=${{ github.event.client_payload.song }}"
+          -F "artist=${{ env.ARTIST }}" \
+          -F "song=${{ env.SONG }}"

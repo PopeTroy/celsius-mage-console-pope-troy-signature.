@@ -1,4 +1,4 @@
-name: Celsius Mage Engine
+name: Celsius Mage Engine - SAMA Grade
 on:
   repository_dispatch:
     types: [ignite_mastering]
@@ -6,16 +6,18 @@ on:
 jobs:
   mastering:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: System Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.10
+      - name: Setup Audio Environment
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install Encoders & DSP Libraries
+      - name: Install Encoders
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub
@@ -27,10 +29,22 @@ jobs:
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Post-Back Signal to Registry
+      - name: Update Master Registry File
+        run: |
+          DATE=$(date +'%Y-%m-%d %H:%M:%S')
+          # Create or update the JSON log file in the repo
+          echo "{\"artist\": \"${{ github.event.client_payload.artist }}\", \"song\": \"${{ github.event.client_payload.song }}\", \"status\": \"SAMA_READY\", \"timestamp\": \"$DATE\"}" > latest_session.json
+          
+          git config --global user.name "Celsius-Bot"
+          git config --global user.email "bot@celsiusmediagroup.co.za"
+          git add latest_session.json
+          git commit -m "Registry Update: ${{ github.event.client_payload.artist }} - ${{ github.event.client_payload.song }}"
+          git push
+
+      - name: Post-Back to WordPress
         if: success()
         run: |
-          curl -L -A "Mozilla/5.0" -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          curl -L -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
           -F "action=celsius_receive_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \

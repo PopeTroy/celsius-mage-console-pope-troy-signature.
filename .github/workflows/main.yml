@@ -29,11 +29,11 @@ jobs:
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Force Handshake to WordPress
+      - name: Force Mega Circuit Handshake
         if: success()
         run: |
-          curl -L -v -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
-          -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
+          curl -L -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
           -F "action=celsius_capture_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \

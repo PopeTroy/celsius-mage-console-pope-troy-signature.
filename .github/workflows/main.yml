@@ -1,4 +1,4 @@
-name: Celsius Mage Engine - SAMA Grade
+name: Celsius Mage Engine - Global Standard
 on:
   repository_dispatch:
     types: [ignite_mastering]
@@ -6,10 +6,8 @@ on:
 jobs:
   mastering:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: System Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Audio Environment
@@ -17,35 +15,24 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install Encoders
+      - name: Install Professional Tools
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub
 
-      - name: Execute PRCE Mastering Chain
+      - name: Expert Mastering Logic
         env:
           WE_LINK: ${{ github.event.client_payload.we_link }}
           ARTIST: ${{ github.event.client_payload.artist }}
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Update Master Registry File
-        run: |
-          DATE=$(date +'%Y-%m-%d %H:%M:%S')
-          # Create or update the JSON log file in the repo
-          echo "{\"artist\": \"${{ github.event.client_payload.artist }}\", \"song\": \"${{ github.event.client_payload.song }}\", \"status\": \"SAMA_READY\", \"timestamp\": \"$DATE\"}" > latest_session.json
-          
-          git config --global user.name "Celsius-Bot"
-          git config --global user.email "bot@celsiusmediagroup.co.za"
-          git add latest_session.json
-          git commit -m "Registry Update: ${{ github.event.client_payload.artist }} - ${{ github.event.client_payload.song }}"
-          git push
-
-      - name: Post-Back to WordPress
+      - name: Secure Return to WordPress
         if: success()
         run: |
-          curl -L -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
-          -F "action=celsius_receive_master" \
+          curl -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          -H "User-Agent: CelsiusEngine/1.0" \
+          -F "action=celsius_capture_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \
           -F "song=${{ github.event.client_payload.song }}"

@@ -1,4 +1,4 @@
-name: Celsius Mage - Professional Mastering Engine
+name: Celsius Mage - King of Engines
 on:
   repository_dispatch:
     types: [ignite_mastering]
@@ -7,49 +7,34 @@ jobs:
   mastering:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Allows the bot to write the session log to your repo
+      contents: write
     steps:
-      - name: System Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Professional Python Environment
+      - name: Setup Audio Environment
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      - name: Install Acoustic DSP & Mastering Tools
+      - name: Install Acoustic Tools (FFmpeg/DSP)
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests pydub yt-dlp
 
-      - name: Execute Expert Mastering Logic
-        # This triggers the Groq-level sound engineering script
+      - name: Execute Global Standard Mastering
         env:
           WE_LINK: ${{ github.event.client_payload.we_link }}
           ARTIST: ${{ github.event.client_payload.artist }}
           SONG: ${{ github.event.client_payload.song }}
         run: python mastering_logic.py
 
-      - name: Generate Session Registry (The Log)
-        # This creates the permanent record for SAMA/UK/USA compliance
-        run: |
-          TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S')
-          echo "{\"artist\": \"${{ github.event.client_payload.artist }}\", \"song\": \"${{ github.event.client_payload.song }}\", \"status\": \"RADIO_READY\", \"timestamp\": \"$TIMESTAMP\"}" > latest_session.json
-          
-          git config --global user.name "Celsius-Mage-Bot"
-          git config --global user.email "bot@celsiusmediagroup.co.za"
-          git add latest_session.json
-          git commit -m "New Master Logged: ${{ github.event.client_payload.artist }} - ${{ github.event.client_payload.song }}"
-          git push
-
-      - name: Secure Push to Celsius Media Library
-        # This is the final handshake that sends the MP3 back to WordPress
+      - name: Force Handshake to WordPress
         if: success()
         run: |
-          curl -L -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
-          -H "User-Agent: CelsiusMasteringEngine/1.0" \
+          curl -L -v -X POST "https://celsiusmediagroup.co.za/wp-admin/admin-ajax.php" \
+          -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)" \
           -F "action=celsius_capture_master" \
           -F "master_file=@output_render.mp3" \
           -F "artist=${{ github.event.client_payload.artist }}" \
-          -F "song=${{ github.event.client_payload.song }}" \
-          -F "registry_log=@latest_session.json"
+          -F "song=${{ github.event.client_payload.song }}"

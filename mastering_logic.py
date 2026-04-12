@@ -44,20 +44,22 @@ def get_expert_mastering_math():
         return "loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():
-    if not AUDIO_LINK: return
+    print(f"--- IGNITING EXPERT ENGINE: {ARTIST} - {SONG} ---")
+    if not AUDIO_LINK:
+        print("Error: No Audio Link")
+        return
     
     # 1. Pull the raw signal
     r = requests.get(AUDIO_LINK)
-    with open("input.wav", "wb") as f: f.write(r.content)
+    with open("input.wav", "wb") as f:
+        f.write(r.content)
 
     # 2. Get Expert Math
     math = get_expert_mastering_math()
     print(f"Prophetic Chain: {math}")
 
     # 3. Apply Dimensional Overwrite
-    # Use simple filename for the process to avoid path errors
-    temp_output = "master_output.mp3"
-    final_output = f"{ARTIST} - {SONG}.mp3"
+    output_name = f"{ARTIST} - {SONG}.mp3"
     
     cmd = [
         "ffmpeg", "-y", "-i", "input.wav",
@@ -65,14 +67,13 @@ def execute_circuit():
         "-codec:a", "libmp3lame", "-b:a", "320k",
         "-metadata", f"title={SONG}",
         "-metadata", f"artist={ARTIST}",
-        temp_output
+        output_name
     ]
     subprocess.run(cmd)
 
-    # 4. Finalize & Rename
-    if os.path.exists(temp_output):
-        os.rename(temp_output, final_output)
-        url_safe_name = final_output.replace(" ", "%20")
+    # 4. Finalize Live Registry
+    if os.path.exists(output_name):
+        url_safe_name = output_name.replace(" ", "%20")
         live_entry = {
             "timestamp": TIMESTAMP,
             "artist": ARTIST,
@@ -82,16 +83,9 @@ def execute_circuit():
         }
         with open('latest_session.json', 'w') as f:
             json.dump(live_entry, f, indent=4)
-        print(f"UESP Master Success: {final_output}")
+        print(f"UESP Master Success: {output_name}")
     else:
-        print("Circuit Failure: FFmpeg did not produce a file.")
-
-if __name__ == "__main__":
-    execute_circuit()
-            json.dump(live_entry, f, indent=4)
-        print(f"Master Published: {output_name}")
-    else:
-        print("Circuit Failed: No file produced.")
+        print("Circuit Failure: No file produced.")
 
 if __name__ == "__main__":
     execute_circuit()

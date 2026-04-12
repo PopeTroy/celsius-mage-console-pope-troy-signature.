@@ -22,8 +22,8 @@ def get_expert_mastering_math():
     """UESP PRCE: Analysis of Billboard & Grammy Winner Commonality 1958-2026."""
     system_prompt = (
         "You are the UESP PRCE Master Sound Engineer. Analyze winner commonality 1958-2026. "
-        "Provide ONLY a valid FFmpeg filter string. Focus on tonal balance and -14 LUFS. "
-        "Standard filters ONLY: loudnorm, compand, equalizer. No prose."
+        "Provide ONLY a valid FFmpeg filter string. Target -14 LUFS. "
+        "Standard filters: loudnorm, compand, equalizer, firequalizer."
     )
     user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Goal: {USER_CMD}."
     
@@ -40,39 +40,47 @@ def get_expert_mastering_math():
 def execute_circuit():
     print(f"--- ACQUIRING SIGNAL: {SONG} ---")
     
-    # 1. High-Precision Signal Acquisition
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    try:
-        r = requests.get(AUDIO_LINK, headers=headers, timeout=60)
-        r.raise_for_status()
-        
-        # Determine format and detect HTML poison
-        content_type = r.headers.get('Content-Type', '').lower()
-        if 'text/html' in content_type:
-            print("CRITICAL: The link provided is a web page, not a direct audio file.")
+    input_file = None
+    
+    # Priority 1: Check for manual upload in repo root
+    for fmt in ['input.mp3', 'input.wav', 'input.m4a']:
+        if os.path.exists(fmt):
+            input_file = fmt
+            print(f"LOCAL SIGNAL DETECTED: {input_file}")
+            break
+
+    # Priority 2: Download if no local file exists
+    if not input_file and AUDIO_LINK:
+        headers = {'User-Agent': 'Mozilla/5.0'}
+        try:
+            r = requests.get(AUDIO_LINK, headers=headers, timeout=60)
+            r.raise_for_status()
+            
+            # Check for HTML poison
+            if 'text/html' in r.headers.get('Content-Type', ''):
+                print("CRITICAL: Link provided is a webpage, not raw audio.")
+                return
+
+            ext = "wav" if ".wav" in AUDIO_LINK.lower() else "mp3"
+            input_file = f"downloaded_input.{ext}"
+            with open(input_file, "wb") as f:
+                f.write(r.content)
+        except Exception as e:
+            print(f"DOWNLOAD ERROR: {e}")
             return
 
-        source_ext = "wav" if ".wav" in AUDIO_LINK.lower() else "mp3"
-        input_filename = f"source_input.{source_ext}"
-        
-        with open(input_filename, "wb") as f:
-            f.write(r.content)
-            
-        if os.path.getsize(input_filename) < 20000: # Files under 20KB are almost never audio
-            print("SIGNAL ERROR: File size too small. Likely an error page or redirect.")
-            return
-    except Exception as e:
-        print(f"CONNECTION ERROR: {e}")
+    if not input_file:
+        print("CRITICAL: No local 'input.mp3' and no valid download link found.")
         return
 
     # 2. Expert Mastering Math
     math = get_expert_mastering_math()
     print(f"UESP Master Chain: {math}")
 
-    # 3. Apply Dimensional Overwrite
+    # 3. Process Master
     output_name = f"{ARTIST} - {SONG}.mp3"
     cmd = [
-        "ffmpeg", "-y", "-i", input_filename,
+        "ffmpeg", "-y", "-i", input_file,
         "-af", math,
         "-codec:a", "libmp3lame", "-b:a", "320k",
         "-metadata", f"title={SONG}",
@@ -80,14 +88,13 @@ def execute_circuit():
         output_name
     ]
     
-    # Run with fallback logic
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print("Expert Chain failed (Exit 183/234). Applying Safe Winner Curve...")
+        print("Expert Chain failed. Applying Safe Winner Curve...")
         cmd[4] = "loudnorm=I=-14:TP=-1.5:LRA=11"
         subprocess.run(cmd, check=True)
 
-    # 4. Finalize & Publish to Registry
+    # 4. Update JSON Registry
     if os.path.exists(output_name):
         url_safe_name = output_name.replace(" ", "%20")
         live_entry = {
@@ -100,6 +107,9 @@ def execute_circuit():
         with open('latest_session.json', 'w') as f:
             json.dump(live_entry, f, indent=4)
         print(f"SUCCESS: {output_name} published.")
+
+if __name__ == "__main__":
+    execute_circuit()
 
 if __name__ == "__main__":
     execute_circuit()

@@ -40,7 +40,7 @@ jobs:
           echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
           
           if [ -z "${{ github.event.client_payload.session_id }}" ]; then
-            echo "MAGE_SESSION_ID=CELS-MANUAL-$(date +%s)" >> $GITHUB_ENV
+            echo "MAGE_SESSION_ID=CELS-$(date +%s)" >> $GITHUB_ENV
           else
             echo "MAGE_SESSION_ID=${{ github.event.client_payload.session_id }}" >> $GITHUB_ENV
           fi
@@ -53,7 +53,7 @@ jobs:
           echo "PRODUCER=${{ github.event.inputs.producer || github.event.client_payload.producer }}" >> $GITHUB_ENV
           echo "USER_COMMAND=${{ github.event.inputs.user_command || github.event.client_payload.user_command }}" >> $GITHUB_ENV
 
-      - name: Install Dependencies
+      - name: Install Tools
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests groq
@@ -67,10 +67,13 @@ jobs:
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
+          
+          # Dynamic staging to prevent Exit 128
           git add latest_session.json
-          git add "*.mp3"
+          git add *.mp3 || echo "No new audio files found to stage."
+          
           if git diff --staged --quiet; then
-            echo "No changes."
+            echo "No changes detected. Skipping commit."
           else
             git commit -m "Live Master Update: $ARTIST - $SONG"
             git push origin main

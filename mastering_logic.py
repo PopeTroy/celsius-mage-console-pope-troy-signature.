@@ -22,8 +22,8 @@ def get_expert_mastering_math():
     """UESP PRCE: Analysis of Billboard & Grammy Winner Commonality 1958-2026."""
     system_prompt = (
         "You are the UESP PRCE Master Sound Engineer. Analyze winner commonality 1958-2026. "
-        "Provide ONLY a valid FFmpeg filter string focusing on tonal balance and -14 LUFS. "
-        "Use standard filters: loudnorm, compand, equalizer, firequalizer. No prose."
+        "Provide ONLY a valid FFmpeg filter string. Focus on tonal balance and -14 LUFS. "
+        "Standard filters ONLY: loudnorm, compand, equalizer. No prose."
     )
     user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Goal: {USER_CMD}."
     
@@ -40,21 +40,26 @@ def get_expert_mastering_math():
 def execute_circuit():
     print(f"--- ACQUIRING SIGNAL: {SONG} ---")
     
-    # 1. Download Logic (Handles WAV or MP3 links)
+    # 1. High-Precision Signal Acquisition
     headers = {'User-Agent': 'Mozilla/5.0'}
     try:
         r = requests.get(AUDIO_LINK, headers=headers, timeout=60)
         r.raise_for_status()
         
-        # Determine source extension
+        # Determine format and detect HTML poison
+        content_type = r.headers.get('Content-Type', '').lower()
+        if 'text/html' in content_type:
+            print("CRITICAL: The link provided is a web page, not a direct audio file.")
+            return
+
         source_ext = "wav" if ".wav" in AUDIO_LINK.lower() else "mp3"
         input_filename = f"source_input.{source_ext}"
         
         with open(input_filename, "wb") as f:
             f.write(r.content)
             
-        if os.path.getsize(input_filename) < 10000:
-            print("SIGNAL ERROR: Link did not return valid audio data.")
+        if os.path.getsize(input_filename) < 20000: # Files under 20KB are almost never audio
+            print("SIGNAL ERROR: File size too small. Likely an error page or redirect.")
             return
     except Exception as e:
         print(f"CONNECTION ERROR: {e}")
@@ -64,7 +69,7 @@ def execute_circuit():
     math = get_expert_mastering_math()
     print(f"UESP Master Chain: {math}")
 
-    # 3. Process & Master
+    # 3. Apply Dimensional Overwrite
     output_name = f"{ARTIST} - {SONG}.mp3"
     cmd = [
         "ffmpeg", "-y", "-i", input_filename,
@@ -72,18 +77,17 @@ def execute_circuit():
         "-codec:a", "libmp3lame", "-b:a", "320k",
         "-metadata", f"title={SONG}",
         "-metadata", f"artist={ARTIST}",
-        "-metadata", f"composer={PRODUCER}",
         output_name
     ]
     
-    # Execute with Fallback for Exit 183
+    # Run with fallback logic
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print("Expert Chain failed. Applying Safe Winner Curve...")
+        print("Expert Chain failed (Exit 183/234). Applying Safe Winner Curve...")
         cmd[4] = "loudnorm=I=-14:TP=-1.5:LRA=11"
         subprocess.run(cmd, check=True)
 
-    # 4. Create Link & Update JSON Registry
+    # 4. Finalize & Publish to Registry
     if os.path.exists(output_name):
         url_safe_name = output_name.replace(" ", "%20")
         live_entry = {

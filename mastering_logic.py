@@ -16,11 +16,11 @@ RAW_BASE_URL = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/"
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def get_expert_mastering_math():
-    """UESP PRCE: Analysis of Billboard & Grammy Winner Commonality 1958-2026."""
+    """UESP PRCE: Grammy/Billboard Commonality 1958-2026."""
     system_prompt = (
         "You are the UESP PRCE Master Sound Engineer. Analyze winner commonality 1958-2026. "
-        "Provide ONLY a valid FFmpeg filter string. Focus on tonal balance and -14 LUFS. "
-        "Use standard filters: loudnorm, compand, equalizer. No prose, no quotes."
+        "Provide ONLY a valid FFmpeg filter string. Target -14 LUFS. "
+        "Standard filters ONLY: loudnorm, compand, equalizer. No prose."
     )
     user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Goal: {USER_CMD}."
     
@@ -31,33 +31,35 @@ def get_expert_mastering_math():
             temperature=0.1
         )
         math = completion.choices[0].message.content.strip()
+        # Clean the string for FFmpeg safety
         return math.replace('"', '').replace('`', '').replace(';', ',')
-    except:
+    except Exception:
         return "loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():
-    print("--- SCANNING DIRECTORY FOR SIGNAL ---")
+    print("--- SCANNING FOR RAW SIGNAL ---")
     
-    # Supported formats in order of priority
-    supported_formats = ('.wav', '.mp3', '.m4a', '.flac', '.ogg')
+    supported_formats = ('.wav', '.mp3', '.m4a', '.flac')
     input_file = None
 
-    # Logic to pick up the FIRST audio file found in the directory
+    # Logic: Pick the first audio file that does NOT contain "Master"
     for file in os.listdir('.'):
-        if file.lower().endswith(supported_formats) and "Master" not in file:
-            input_file = file
-            print(f"SIGNAL DETECTED: {input_file}")
-            break
+        file_lower = file.lower()
+        if file_lower.endswith(supported_formats):
+            if "master" not in file_lower:
+                input_file = file
+                print(f"RAW SIGNAL DETECTED: {input_file}")
+                break
 
     if not input_file:
-        print("CRITICAL: No audio file found in the directory.")
+        print("CRITICAL: No raw audio file found.")
         return
 
-    # 1. Expert Mastering Math
+    # 1. Expert Math
     math = get_expert_mastering_math()
     print(f"UESP Master Chain: {math}")
 
-    # 2. Apply Dimensional Overwrite
+    # 2. Apply Master
     output_name = f"{ARTIST} - {SONG} (Signature Master).mp3"
     cmd = [
         "ffmpeg", "-y", "-i", input_file,
@@ -80,7 +82,7 @@ def execute_circuit():
         ]
         subprocess.run(fallback, check=True)
 
-    # 3. Finalize & Publish to Registry
+    # 3. Finalize Registry (Aligned with the 'if' block above)
     if os.path.exists(output_name):
         url_safe_name = output_name.replace(" ", "%20")
         live_entry = {
@@ -96,70 +98,3 @@ def execute_circuit():
 
 if __name__ == "__main__":
     execute_circuit()
-        math = completion.choices[0].message.content.strip()
-        return math.replace('"', '').replace('`', '').replace(';', ',')
-    except:
-        return "loudnorm=I=-14:TP=-1.5:LRA=11"
-
-def execute_circuit():
-    print("--- SCANNING DIRECTORY FOR SIGNAL ---")
-    
-    # Supported formats in order of priority
-    supported_formats = ('.wav', '.mp3', '.m4a', '.flac', '.ogg')
-    input_file = None
-
-    # Logic to pick up the FIRST audio file found in the directory
-    for file in os.listdir('.'):
-        if file.lower().endswith(supported_formats) and "Master" not in file:
-            input_file = file
-            print(f"SIGNAL DETECTED: {input_file}")
-            break
-
-    if not input_file:
-        print("CRITICAL: No audio file found in the directory.")
-        return
-
-    # 1. Expert Mastering Math
-    math = get_expert_mastering_math()
-    print(f"UESP Master Chain: {math}")
-
-    # 2. Apply Dimensional Overwrite
-    output_name = f"{ARTIST} - {SONG} (Signature Master).mp3"
-    cmd = [
-        "ffmpeg", "-y", "-i", input_file,
-        "-af", math,
-        "-codec:a", "libmp3lame", "-b:a", "320k",
-        "-metadata", f"title={SONG}",
-        "-metadata", f"artist={ARTIST}",
-        output_name
-    ]
-    
-    try:
-        subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError:
-        print("Expert Chain failed. Applying Safe Winner Curve...")
-        fallback = [
-            "ffmpeg", "-y", "-i", input_file,
-            "-af", "loudnorm=I=-14:TP=-1.5:LRA=11",
-            "-codec:a", "libmp3lame", "-b:a", "320k",
-            output_name
-        ]
-        subprocess.run(fallback, check=True)
-
-    # 3. Finalize & Publish to Registry
-    if os.path.exists(output_name):
-        url_safe_name = output_name.replace(" ", "%20")
-        live_entry = {
-            "timestamp": TIMESTAMP,
-            "artist": ARTIST,
-            "song": SONG,
-            "status": "POPE TROY SIGNATURE MASTER COMPLETE",
-            "download_url": f"{RAW_BASE_URL}{url_safe_name}"
-        }
-        with open('latest_session.json', 'w') as f:
-            json.dump(live_entry, f, indent=4)
-        print(f"SUCCESS: {output_name} published.")
-
-if __name__ == "__main__":
-    execute_circuit()
-    

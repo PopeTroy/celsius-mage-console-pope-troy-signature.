@@ -18,13 +18,14 @@ USERNAME = "PopeTroy"
 REPO = "celsius-mage-console-pope-troy-signature"
 RAW_BASE_URL = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/"
 
+# Initialize client without extra arguments to avoid version conflicts
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def get_expert_mastering_math():
-    """Analyze Grammy/Billboard winners 1958-2026."""
+    """Analyze Billboard/Grammy winner commonality 1958-2026."""
     system_prompt = (
-        "You are a Master Sound Engineer. Analyze Grammy winners 1958-2026. "
-        "Provide ONLY a valid FFmpeg filter string. No prose, no quotes."
+        "You are a Master Sound Engineer. Analyze Grammy winners from 1958 to 2026. "
+        "Provide ONLY a valid FFmpeg filter string for mastering. No prose, no quotes."
     )
     user_prompt = f"Master: {SONG} by {ARTIST}. Goal: {USER_CMD}."
     
@@ -35,7 +36,8 @@ def get_expert_mastering_math():
             temperature=0.1
         )
         return completion.choices[0].message.content.strip().replace('"', '')
-    except:
+    except Exception as e:
+        print(f"Groq API Error: {e}")
         return "loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():
@@ -44,16 +46,20 @@ def execute_circuit():
         print("CRITICAL: No Audio Link found.")
         return
     
-    # 1. Download
-    r = requests.get(AUDIO_LINK)
-    with open("input.wav", "wb") as f:
-        f.write(r.content)
+    # 1. Download source signal
+    try:
+        r = requests.get(AUDIO_LINK, timeout=30)
+        with open("input.wav", "wb") as f:
+            f.write(r.content)
+    except Exception as e:
+        print(f"Download Error: {e}")
+        return
 
-    # 2. Expert Math
+    # 2. Expert Engineering Overwrite
     math = get_expert_mastering_math()
-    print(f"UESP Filter: {math}")
+    print(f"UESP Master Chain: {math}")
 
-    # 3. Process
+    # 3. Apply Dimensional Overwrite
     output_name = f"{ARTIST} - {SONG}.mp3"
     cmd = [
         "ffmpeg", "-y", "-i", "input.wav",
@@ -63,9 +69,9 @@ def execute_circuit():
         "-metadata", f"artist={ARTIST}",
         output_name
     ]
-    subprocess.run(cmd)
+    subprocess.run(cmd, check=True)
 
-    # 4. Force Write JSON Registry
+    # 4. Force Write JSON Registry for WordPress
     if os.path.exists(output_name):
         url_safe_name = output_name.replace(" ", "%20")
         live_entry = {
@@ -76,16 +82,15 @@ def execute_circuit():
             "download_url": f"{RAW_BASE_URL}{url_safe_name}"
         }
         
-        # Explicitly writing to current directory
         json_path = os.path.join(os.getcwd(), 'latest_session.json')
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(live_entry, f, indent=4)
             f.flush()
-            os.fsync(f.fileno()) # Forces OS to write to disk
+            os.fsync(f.fileno())
         
-        print(f"SUCCESS: JSON written to {json_path}")
+        print(f"SUCCESS: Master produced and JSON updated at {json_path}")
     else:
-        print("FAILURE: MP3 not created. JSON update skipped.")
+        print("FAILURE: MP3 generation failed.")
 
 if __name__ == "__main__":
     execute_circuit()

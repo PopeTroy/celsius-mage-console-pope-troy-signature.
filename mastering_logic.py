@@ -22,60 +22,42 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def get_expert_mastering_math():
     """
-    UESP PRCE: Expert Sound Engineering Analysis.
-    Groq analyzes 70 years of Grammy/Billboard winners (1958-2026) 
-    to resolve temporal jitter and apply the 'Winner Commonality' curve.
+    UESP PRCE Engine: Analyzing Billboard & Grammy winner commonality (1958-2026).
     """
     system_prompt = (
-        "You are the UESP PRCE Sound Engineering Engine. You possess the sonic profiles of every "
-        "Billboard #1 and Grammy Award-winning song from 1958 to 2026. "
-        "Your task: Provide a professional FFmpeg filter string that masters the input audio. "
-        "Rules: \n"
-        "1. Focus on tonal balance, LUFS normalization (-14), and harmonic clarity.\n"
-        "2. Analyze the specific genre/mood requested by the user command.\n"
-        "3. Output ONLY the FFmpeg filter string (e.g., 'loudnorm=I=-14,firequalizer=...').\n"
-        "4. Do NOT include explanations or quotes."
+        "You are a Master Sound Engineer. Analyze the sonic metadata of Grammy-winning tracks "
+        "from 1958 to 2026. Provide ONLY a valid FFmpeg filter string for mastering. "
+        "Apply the 'Winner Commonality' curve: Tonal balance, -14 LUFS, and high-fidelity clarity. "
+        "Output ONLY the string. No prose."
     )
-    
-    user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Goal: {USER_CMD}. Producer: {PRODUCER}."
+    user_prompt = f"Master this: {SONG} by {ARTIST}. Goal: {USER_CMD}."
     
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.2 # Keep it precise and technical
+            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
+            temperature=0.1
         )
-        # Ensure the output is clean
         math = completion.choices[0].message.content.strip().replace('"', '').replace('`', '')
-        # Fallback security if Groq adds prose
-        if "loudnorm" not in math:
-            return "loudnorm=I=-14:TP=-1.5:LRA=11,firequalizer=gain='if(lt(f,100),-2,0)'"
-        return math
-    except Exception as e:
-        print(f"UESP Math Error: {e}")
+        return math if "loudnorm" in math else "loudnorm=I=-14:TP=-1.5:LRA=11"
+    except:
         return "loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():
-    print(f"--- IGNITING EXPERT ENGINE: {ARTIST} - {SONG} ---")
+    if not AUDIO_LINK: return
     
-    if not all([AUDIO_LINK, ARTIST, SONG]):
-        print("CRITICAL: Incomplete Session Data.")
-        return
-
     # 1. Pull the raw signal
     r = requests.get(AUDIO_LINK)
-    with open("input.wav", "wb") as f:
-        f.write(r.content)
+    with open("input.wav", "wb") as f: f.write(r.content)
 
-    # 2. Get the Overwrite Math from the Expert Engineer (Groq)
+    # 2. Get Expert Math
     math = get_expert_mastering_math()
-    print(f"Groq Mastering Chain: {math}")
+    print(f"Prophetic Chain: {math}")
 
-    # 3. Apply the Dimensional Overwrite
-    output_name = f"{ARTIST} - {SONG}.mp3"
+    # 3. Apply Dimensional Overwrite
+    # Use simple filename for the process to avoid path errors
+    temp_output = "master_output.mp3"
+    final_output = f"{ARTIST} - {SONG}.mp3"
     
     cmd = [
         "ffmpeg", "-y", "-i", "input.wav",
@@ -83,23 +65,29 @@ def execute_circuit():
         "-codec:a", "libmp3lame", "-b:a", "320k",
         "-metadata", f"title={SONG}",
         "-metadata", f"artist={ARTIST}",
-        "-metadata", f"composer={PRODUCER}",
-        "-metadata", "comment=UESP PRCE Signature Master (1958-2026)",
-        output_name
+        temp_output
     ]
     subprocess.run(cmd)
-    
-    # 4. Finalize Live Registry
-    if os.path.exists(output_name):
-        url_safe_name = output_name.replace(" ", "%20")
+
+    # 4. Finalize & Rename
+    if os.path.exists(temp_output):
+        os.rename(temp_output, final_output)
+        url_safe_name = final_output.replace(" ", "%20")
         live_entry = {
             "timestamp": TIMESTAMP,
             "artist": ARTIST,
             "song": SONG,
-            "status": "POPE TROY SIGNATURE MASTER COMPLETE",
+            "status": "RADIO_READY",
             "download_url": f"{RAW_BASE_URL}{url_safe_name}"
         }
         with open('latest_session.json', 'w') as f:
+            json.dump(live_entry, f, indent=4)
+        print(f"UESP Master Success: {final_output}")
+    else:
+        print("Circuit Failure: FFmpeg did not produce a file.")
+
+if __name__ == "__main__":
+    execute_circuit()
             json.dump(live_entry, f, indent=4)
         print(f"Master Published: {output_name}")
     else:

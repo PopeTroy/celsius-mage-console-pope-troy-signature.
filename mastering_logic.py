@@ -4,16 +4,16 @@ import requests
 import subprocess
 from groq import Groq
 
-# 1. Identity & Environment Setup
+# 1. Identity & Environment Setup (Zero Static Defaults)
 TIMESTAMP = os.getenv('MAGE_TIMESTAMP')
-SESSION_ID = os.getenv('MAGE_SESSION_ID', 'CELS-LIVE-SESSION')
+SESSION_ID = os.getenv('MAGE_SESSION_ID')
 AUDIO_LINK = os.getenv('AUDIO_LINK')
 
-# 2. Metadata from Astra UI (Defaulted to Pergamum for your test)
-ARTIST = os.getenv('ARTIST', 'Pope Troy')
-SONG = os.getenv('SONG', 'Pergamum')
-PRODUCER = os.getenv('PRODUCER', 'Celsius Media Group')
-USER_CMD = os.getenv('USER_COMMAND', 'Award Nomination Ready')
+# 2. Metadata from Live Payload
+ARTIST = os.getenv('ARTIST')
+SONG = os.getenv('SONG')
+PRODUCER = os.getenv('PRODUCER')
+USER_CMD = os.getenv('USER_COMMAND')
 
 # 3. Live URL Construction
 USERNAME = "PopeTroy"
@@ -37,13 +37,12 @@ def get_overwrite_math():
         )
         return completion.choices[0].message.content.strip()
     except Exception:
-        # High-fidelity fallback math
+        # High-fidelity fallback math: Commonality Overwrite
         return "loudnorm=I=-14:TP=-1.0:LRA=11,firequalizer=gain='if(lt(f,100),-2,if(gt(f,10000),2,0))'"
 
 def update_live_log(final_filename):
     """Updates the JSON with a live link for WordPress to pull."""
     log_file = 'latest_session.json'
-    # Encoding spaces for the URL
     url_safe_name = final_filename.replace(" ", "%20")
     
     live_entry = {
@@ -63,11 +62,11 @@ def update_live_log(final_filename):
 def execute_circuit():
     print(f"--- IGNITING MAGE ENGINE: {SONG} ---")
     
-    # 1. Download source from Puter
-    if not AUDIO_LINK:
-        print("Error: No AUDIO_LINK found.")
+    if not all([AUDIO_LINK, ARTIST, SONG]):
+        print("CRITICAL ERROR: Incomplete Live Data. Aborting.")
         return
 
+    # 1. Download source from Puter
     r = requests.get(AUDIO_LINK)
     with open("input.wav", "wb") as f:
         f.write(r.content)
@@ -76,7 +75,6 @@ def execute_circuit():
     math = get_overwrite_math()
 
     # 3. Apply Dimensional Overwrite & Metadata Injection
-    # Branded Filename: Artist - Song.mp3
     output_name = f"{ARTIST} - {SONG}.mp3"
     
     cmd = [

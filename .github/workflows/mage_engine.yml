@@ -48,9 +48,8 @@ jobs:
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           
-          # Stage updates. If MP3 is missing, log it and continue.
           git add latest_session.json
-          git add *.mp3 || echo "WARN: No MP3 file generated to stage."
+          git add -f "*.mp3" || echo "WARN: No MP3 file generated to stage."
           
           if git diff --staged --quiet; then
             echo "No changes detected."

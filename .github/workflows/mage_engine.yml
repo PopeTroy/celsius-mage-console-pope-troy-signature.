@@ -3,13 +3,15 @@ name: Celsius Mage Engine Dispatcher
 on:
   workflow_dispatch:
     inputs:
+      puter_link: { description: 'Puter Direct Link (WAV/MP3)', required: true }
       artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
       song_title: { description: 'Song', required: true, default: 'Pergamum' }
       producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
-      user_command: { description: 'Goal', required: true, default: 'Expert Mastering' }
+      user_command: { description: 'Prophetic Goal', required: true }
 
 jobs:
   run_circuit:
+    name: "Execute UESP PRCE Master"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -19,11 +21,12 @@ jobs:
       - name: Studio Setup
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install groq
+          pip install requests groq
 
-      - name: Set Circuit Environment
+      - name: Set Variables
         run: |
           echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          echo "AUDIO_LINK=${{ github.event.inputs.puter_link }}" >> $GITHUB_ENV
           echo "ARTIST=${{ github.event.inputs.artist_name }}" >> $GITHUB_ENV
           echo "SONG=${{ github.event.inputs.song_title }}" >> $GITHUB_ENV
           echo "PRODUCER=${{ github.event.inputs.producer }}" >> $GITHUB_ENV
@@ -34,10 +37,10 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python mastering_logic.py
 
-      - name: Push Master to Repository
+      - name: Push to Repository
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           git add latest_session.json
-          git add -f "*.mp3"
-          git diff --staged --quiet || (git commit -m "Signature Master Published: $ARTIST - $SONG" && git push origin main)
+          git add -f "*.mp3" || echo "No file"
+          git diff --staged --quiet || (git commit -m "Master Published: $ARTIST - $SONG" && git push origin main)

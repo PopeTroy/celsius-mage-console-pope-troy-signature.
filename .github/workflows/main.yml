@@ -1,30 +1,45 @@
-name: Celsius Mage Engine Dispatcher
+name: Celsius Mage Engine (UESP-PRCE)
 
 on:
   repository_dispatch:
     types: [ignite_mastering]
   workflow_dispatch:
     inputs:
-      audio_link:
-        description: 'Puter Link'
+      puter_link:
+        description: 'Puter.js Solid Link'
+        required: true
       user_command:
-        description: 'Prophetic Goal'
+        description: 'Prophetic Directive (e.g. 90s Grammy Feel)'
+        default: 'Grammy Winner Standard 1958-2026'
 
 jobs:
-  run_circuit:
+  dimensional_overwrite:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Generate Meta
-        run: |
-          echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          echo "MAGE_SESSION_ID=CELS-$(date +%s)" >> $GITHUB_ENV
-          echo "AUDIO_LINK=${{ github.event.client_payload.puter_link || github.event.inputs.audio_link }}" >> $GITHUB_ENV
-          echo "USER_COMMAND=${{ github.event.client_payload.user_command || github.event.inputs.user_command }}" >> $GITHUB_ENV
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Master Audio
+      - name: Generate Traceability Meta
+        id: meta
+        run: |
+          echo "TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          if [ -z "${{ github.event.client_payload.session_id }}" ]; then
+            echo "SESSION_ID=CELS-$(date +%s)" >> $GITHUB_ENV
+          else
+            echo "SESSION_ID=${{ github.event.client_payload.session_id }}" >> $GITHUB_ENV
+          fi
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          pip install requests groq
+
+      - name: Execute Engine
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: |
-          pip install requests groq
-          python engine.py
+          WP_APP_PASS: ${{ secrets.WP_APP_PASS }}
+          MAGE_TIMESTAMP: ${{ env.TIMESTAMP }}
+          MAGE_SESSION_ID: ${{ env.SESSION_ID }}
+          AUDIO_LINK: ${{ github.event.inputs.puter_link || github.event.client_payload.puter_link }}
+          USER_COMMAND: ${{ github.event.inputs.user_command || github.event.client_payload.user_command }}
+        run: python engine.py

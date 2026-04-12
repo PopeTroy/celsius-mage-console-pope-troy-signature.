@@ -27,9 +27,9 @@ jobs:
       - name: Setup Tools
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install requests groq
+          pip install -r requirements.txt
 
-      - name: Set Circuit Environment
+      - name: Set Environment
         run: |
           echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
           echo "AUDIO_LINK=${{ github.event.inputs.puter_link || github.event.client_payload.puter_link }}" >> $GITHUB_ENV
@@ -43,17 +43,20 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python mastering_logic.py
 
-      - name: Push Master to Repository
+      - name: Push to Repository
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           
+          # Debug: Show files created
+          ls -la
+          
           git add latest_session.json
-          git add -f "*.mp3" || echo "WARN: No MP3 file generated to stage."
+          git add -f "*.mp3" || echo "No MP3 found."
           
           if git diff --staged --quiet; then
             echo "No changes detected."
           else
-            git commit -m "Live Master Published: $ARTIST - $SONG"
+            git commit -m "Live Master: $ARTIST - $SONG"
             git push origin main
           fi

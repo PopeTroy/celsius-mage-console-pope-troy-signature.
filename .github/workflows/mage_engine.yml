@@ -24,6 +24,7 @@ on:
 
 jobs:
   run_circuit:
+    name: "Ignite UESP PRCE Engine"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,28 +35,30 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set Circuit Variables
+      - name: Generate Live Metadata
         run: |
           echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
           
           if [ -z "${{ github.event.client_payload.session_id }}" ]; then
-            echo "MAGE_SESSION_ID=CELS-$(date +%s)" >> $GITHUB_ENV
+            echo "MAGE_SESSION_ID=CELS-MANUAL-$(date +%s)" >> $GITHUB_ENV
           else
             echo "MAGE_SESSION_ID=${{ github.event.client_payload.session_id }}" >> $GITHUB_ENV
           fi
 
+      - name: Set Engine Environment
+        run: |
           echo "AUDIO_LINK=${{ github.event.inputs.puter_link || github.event.client_payload.puter_link }}" >> $GITHUB_ENV
           echo "ARTIST=${{ github.event.inputs.artist_name || github.event.client_payload.artist_name }}" >> $GITHUB_ENV
           echo "SONG=${{ github.event.inputs.song_title || github.event.client_payload.song_title }}" >> $GITHUB_ENV
           echo "PRODUCER=${{ github.event.inputs.producer || github.event.client_payload.producer }}" >> $GITHUB_ENV
           echo "USER_COMMAND=${{ github.event.inputs.user_command || github.event.client_payload.user_command }}" >> $GITHUB_ENV
 
-      - name: Install Tools
+      - name: Install Dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests groq
 
-      - name: Run Engine
+      - name: Execute Master
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python mastering_logic.py
@@ -69,6 +72,6 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes."
           else
-            git commit -m "Live Update: $ARTIST - $SONG"
+            git commit -m "Live Master Update: $ARTIST - $SONG"
             git push origin main
           fi

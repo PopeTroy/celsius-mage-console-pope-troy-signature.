@@ -3,13 +3,11 @@ name: Celsius Mage Engine Dispatcher
 on:
   workflow_dispatch:
     inputs:
-      puter_link: { description: 'Puter Link', required: true }
+      puter_link: { description: 'Puter Direct Link', required: true }
       artist_name: { description: 'Artist', required: true }
       song_title: { description: 'Song', required: true }
       producer: { description: 'Producer', required: true }
-      user_command: { description: 'Goal', required: true }
-  repository_dispatch:
-    types: [ignite_mastering]
+      user_command: { description: 'Prophetic Goal', required: true }
 
 jobs:
   run_circuit:
@@ -17,46 +15,32 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Tools
+      - uses: actions/checkout@v4
+      
+      - name: Environment Setup
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install -r requirements.txt
+          pip install requests groq
 
-      - name: Set Environment
+      - name: Set Variables
         run: |
           echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          echo "AUDIO_LINK=${{ github.event.inputs.puter_link || github.event.client_payload.puter_link }}" >> $GITHUB_ENV
-          echo "ARTIST=${{ github.event.inputs.artist_name || github.event.client_payload.artist_name }}" >> $GITHUB_ENV
-          echo "SONG=${{ github.event.inputs.song_title || github.event.client_payload.song_title }}" >> $GITHUB_ENV
-          echo "PRODUCER=${{ github.event.inputs.producer || github.event.client_payload.producer }}" >> $GITHUB_ENV
-          echo "USER_COMMAND=${{ github.event.inputs.user_command || github.event.client_payload.user_command }}" >> $GITHUB_ENV
+          echo "AUDIO_LINK=${{ github.event.inputs.puter_link }}" >> $GITHUB_ENV
+          echo "ARTIST=${{ github.event.inputs.artist_name }}" >> $GITHUB_ENV
+          echo "SONG=${{ github.event.inputs.song_title }}" >> $GITHUB_ENV
+          echo "PRODUCER=${{ github.event.inputs.producer }}" >> $GITHUB_ENV
+          echo "USER_COMMAND=${{ github.event.inputs.user_command }}" >> $GITHUB_ENV
 
       - name: Execute Expert Master
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python mastering_logic.py
 
-      - name: Push to Repository
+      - name: Force Push to Repository
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
-          
-          # Debug: Show files created
-          ls -la
-          
           git add latest_session.json
-          git add -f "*.mp3" || echo "No MP3 found."
-          
-          if git diff --staged --quiet; then
-            echo "No changes detected."
-          else
-            git commit -m "Live Master: $ARTIST - $SONG"
-            git push origin main
-          fi
+          git add -f "*.mp3" || echo "No file produced"
+          git diff --staged --quiet || (git commit -m "Master Published: $ARTIST - $SONG" && git push origin main)

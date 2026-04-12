@@ -1,4 +1,2 @@
-matchering
-ffmpeg-python
-pydub
-groq
+requests==2.31.0
+groq==0.5.0

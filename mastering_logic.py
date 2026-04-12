@@ -22,8 +22,8 @@ def get_expert_mastering_math():
     """UESP PRCE: Analysis of Billboard & Grammy Winner Commonality 1958-2026."""
     system_prompt = (
         "You are the UESP PRCE Master Sound Engineer. Analyze winner commonality 1958-2026. "
-        "Provide ONLY a valid FFmpeg filter string. Target -14 LUFS. "
-        "Standard filters: loudnorm, compand, equalizer, firequalizer."
+        "Provide ONLY a valid FFmpeg filter string focusing on tonal balance and -14 LUFS. "
+        "Use standard filters: loudnorm, compand, equalizer. No quotes, no prose."
     )
     user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Goal: {USER_CMD}."
     
@@ -38,50 +38,42 @@ def get_expert_mastering_math():
         return "loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():
-    print(f"--- ACQUIRING SIGNAL: {SONG} ---")
+    print(f"--- INITIATING SIGNAL: {SONG} ---")
     
     input_file = None
-    
-    # Priority 1: Check for manual upload in repo root
-    for fmt in ['input.mp3', 'input.wav', 'input.m4a']:
+    # Priority 1: Check for manual upload
+    for fmt in ['input.mp3', 'input.wav']:
         if os.path.exists(fmt):
             input_file = fmt
             print(f"LOCAL SIGNAL DETECTED: {input_file}")
             break
 
-    # Priority 2: Download if no local file exists
+    # Priority 2: Download if missing
     if not input_file and AUDIO_LINK:
-        headers = {'User-Agent': 'Mozilla/5.0'}
         try:
-            r = requests.get(AUDIO_LINK, headers=headers, timeout=60)
-            r.raise_for_status()
-            
-            # Check for HTML poison
-            if 'text/html' in r.headers.get('Content-Type', ''):
-                print("CRITICAL: Link provided is a webpage, not raw audio.")
-                return
-
-            ext = "wav" if ".wav" in AUDIO_LINK.lower() else "mp3"
-            input_file = f"downloaded_input.{ext}"
+            r = requests.get(AUDIO_LINK, headers={'User-Agent': 'Mozilla/5.0'}, timeout=60)
+            input_file = "source_input.mp3"
             with open(input_file, "wb") as f:
                 f.write(r.content)
-        except Exception as e:
-            print(f"DOWNLOAD ERROR: {e}")
+        except:
             return
 
     if not input_file:
-        print("CRITICAL: No local 'input.mp3' and no valid download link found.")
+        print("CRITICAL: No input signal found.")
         return
 
     # 2. Expert Mastering Math
     math = get_expert_mastering_math()
     print(f"UESP Master Chain: {math}")
 
-    # 3. Process Master
+    # 3. Process with Explicit Format Flag
     output_name = f"{ARTIST} - {SONG}.mp3"
+    
+    # We use a list to ensure shell arguments are handled safely
     cmd = [
         "ffmpeg", "-y", "-i", input_file,
         "-af", math,
+        "-f", "mp3",  # Force output format to MP3
         "-codec:a", "libmp3lame", "-b:a", "320k",
         "-metadata", f"title={SONG}",
         "-metadata", f"artist={ARTIST}",
@@ -89,17 +81,35 @@ def execute_circuit():
     ]
     
     result = subprocess.run(cmd, capture_output=True, text=True)
+    
+    # Fallback to safe master if expert chain is too complex for FFmpeg
     if result.returncode != 0:
-        print("Expert Chain failed. Applying Safe Winner Curve...")
-        cmd[4] = "loudnorm=I=-14:TP=-1.5:LRA=11"
-        subprocess.run(cmd, check=True)
+        print("Expert Chain failed. Reverting to Safe Winner Curve...")
+        fallback_cmd = [
+            "ffmpeg", "-y", "-i", input_file,
+            "-af", "loudnorm=I=-14:TP=-1.5:LRA=11",
+            "-f", "mp3",
+            "-codec:a", "libmp3lame", "-b:a", "320k",
+            output_name
+        ]
+        subprocess.run(fallback_cmd, check=True)
 
-    # 4. Update JSON Registry
+    # 4. Finalize Registry
     if os.path.exists(output_name):
         url_safe_name = output_name.replace(" ", "%20")
         live_entry = {
             "timestamp": TIMESTAMP,
             "artist": ARTIST,
+            "song": SONG,
+            "status": "RADIO_READY",
+            "download_url": f"{RAW_BASE_URL}{url_safe_name}"
+        }
+        with open('latest_session.json', 'w') as f:
+            json.dump(live_entry, f, indent=4)
+        print(f"SUCCESS: {output_name} published.")
+
+if __name__ == "__main__":
+    execute_circuit()
             "song": SONG,
             "status": "POPE TROY SIGNATURE MASTER COMPLETE",
             "download_url": f"{RAW_BASE_URL}{url_safe_name}"

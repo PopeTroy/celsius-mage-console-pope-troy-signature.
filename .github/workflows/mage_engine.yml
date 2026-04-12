@@ -1,7 +1,6 @@
 name: Celsius Mage Engine Dispatcher
 
 on:
-  # Manual Trigger: Enables the "Run workflow" button in GitHub Actions tab
   workflow_dispatch:
     inputs:
       puter_link:
@@ -10,71 +9,66 @@ on:
       artist_name:
         description: 'Artist Name'
         required: true
-        default: 'Unknown Artist'
       song_title:
         description: 'Song Title'
         required: true
-        default: 'Untitled Track'
       producer:
-        description: 'Producer Name'
-        required: false
-        default: 'Celsius Media Group'
+        description: 'Producer'
+        required: true
       user_command:
-        description: 'Prophetic Goal (e.g. Radio Ready, 90s Grammy)'
-        required: false
-        default: 'Award Nomination Ready'
+        description: 'Prophetic Goal'
+        required: true
 
-  # Automated Trigger: Responds to WordPress/Astra UI
   repository_dispatch:
     types: [ignite_mastering]
 
 jobs:
   run_circuit:
-    name: "Ignite UESP PRCE Engine"
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Allows the engine to update latest_session.json
+      contents: write
     
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Generate Traceability Metadata
+      - name: Set Circuit Variables
         run: |
-          # Generate ISO 8601 Timestamp & Session ID
           echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
           
           if [ -z "${{ github.event.client_payload.session_id }}" ]; then
-            echo "MAGE_SESSION_ID=CELS-MANUAL-$(date +%s)" >> $GITHUB_ENV
+            echo "MAGE_SESSION_ID=CELS-$(date +%s)" >> $GITHUB_ENV
           else
             echo "MAGE_SESSION_ID=${{ github.event.client_payload.session_id }}" >> $GITHUB_ENV
           fi
 
-      - name: Set Engine Variables
-        run: |
-          # Mapping inputs from UI or Manual fields
           echo "AUDIO_LINK=${{ github.event.inputs.puter_link || github.event.client_payload.puter_link }}" >> $GITHUB_ENV
           echo "ARTIST=${{ github.event.inputs.artist_name || github.event.client_payload.artist_name }}" >> $GITHUB_ENV
           echo "SONG=${{ github.event.inputs.song_title || github.event.client_payload.song_title }}" >> $GITHUB_ENV
           echo "PRODUCER=${{ github.event.inputs.producer || github.event.client_payload.producer }}" >> $GITHUB_ENV
           echo "USER_COMMAND=${{ github.event.inputs.user_command || github.event.client_payload.user_command }}" >> $GITHUB_ENV
 
-      - name: Setup Environment Dependencies
+      - name: Install Tools
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install -r requirements.txt
-          pip install requests groq # Ensures these are present for UESP logic
+          pip install requests groq
 
-      - name: Execute Dimensional Overwrite
+      - name: Run Engine
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        # Pointing to the correct filename from your screenshot
         run: python mastering_logic.py
 
-      - name: Push Pope Troy Signature Log
+      - name: Push Live Update
         run: |
-          git config --global user.name "Celsius Mage Bot"
+          git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           git add latest_session.json
-          # Only push if the JSON was actually updated
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Master Logged: $ARTIST - $SONG" && git push)
+          git add "*.mp3"
+          if git diff --staged --quiet; then
+            echo "No changes."
+          else
+            git commit -m "Live Update: $ARTIST - $SONG"
+            git push origin main
+          fi

@@ -1,10 +1,12 @@
 import os
 import json
+import requests
 import subprocess
 from groq import Groq
 
 # Identity & Environment
 TIMESTAMP = os.getenv('MAGE_TIMESTAMP')
+AUDIO_LINK = os.getenv('AUDIO_LINK')
 ARTIST = os.getenv('ARTIST')
 SONG = os.getenv('SONG')
 PRODUCER = os.getenv('PRODUCER')
@@ -19,9 +21,9 @@ client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 def get_expert_mastering_math():
     """UESP PRCE: Analysis of Billboard & Grammy Winner Commonality 1958-2026."""
     system_prompt = (
-        "You are a Master Sound Engineer. Provide ONLY a valid FFmpeg filter string. "
-        "Use standard filters: loudnorm, compand, equalizer. Target -14 LUFS. "
-        "Do not include any text other than the filter string."
+        "You are the UESP PRCE Master Sound Engineer. Analyze winner commonality 1958-2026. "
+        "Provide ONLY a valid FFmpeg filter string focusing on tonal balance and -14 LUFS. "
+        "Use standard filters: loudnorm, compand, equalizer, firequalizer. No prose."
     )
     user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Goal: {USER_CMD}."
     
@@ -36,38 +38,52 @@ def get_expert_mastering_math():
         return "loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():
-    print(f"--- STARTING LOCAL SIGNAL PROCESSING: {SONG} ---")
+    print(f"--- ACQUIRING SIGNAL: {SONG} ---")
     
-    # Check if the file was uploaded to the repo correctly
-    input_file = "input.wav"
-    if not os.path.exists(input_file):
-        print(f"CRITICAL ERROR: {input_file} not found in repository root.")
+    # 1. Download Logic (Handles WAV or MP3 links)
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    try:
+        r = requests.get(AUDIO_LINK, headers=headers, timeout=60)
+        r.raise_for_status()
+        
+        # Determine source extension
+        source_ext = "wav" if ".wav" in AUDIO_LINK.lower() else "mp3"
+        input_filename = f"source_input.{source_ext}"
+        
+        with open(input_filename, "wb") as f:
+            f.write(r.content)
+            
+        if os.path.getsize(input_filename) < 10000:
+            print("SIGNAL ERROR: Link did not return valid audio data.")
+            return
+    except Exception as e:
+        print(f"CONNECTION ERROR: {e}")
         return
 
-    # 1. Expert Mastering Math
+    # 2. Expert Mastering Math
     math = get_expert_mastering_math()
     print(f"UESP Master Chain: {math}")
 
-    # 2. Apply Dimensional Overwrite
+    # 3. Process & Master
     output_name = f"{ARTIST} - {SONG}.mp3"
     cmd = [
-        "ffmpeg", "-y", "-i", input_file,
+        "ffmpeg", "-y", "-i", input_filename,
         "-af", math,
         "-codec:a", "libmp3lame", "-b:a", "320k",
         "-metadata", f"title={SONG}",
         "-metadata", f"artist={ARTIST}",
+        "-metadata", f"composer={PRODUCER}",
         output_name
     ]
     
-    # Execution with immediate fallback for Exit 183 errors
-    try:
-        subprocess.run(cmd, check=True)
-    except subprocess.CalledProcessError:
-        print("Expert Chain failed (Exit 183). Applying Safe Winner Curve...")
+    # Execute with Fallback for Exit 183
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print("Expert Chain failed. Applying Safe Winner Curve...")
         cmd[4] = "loudnorm=I=-14:TP=-1.5:LRA=11"
         subprocess.run(cmd, check=True)
 
-    # 3. Finalize & Publish to Registry
+    # 4. Create Link & Update JSON Registry
     if os.path.exists(output_name):
         url_safe_name = output_name.replace(" ", "%20")
         live_entry = {

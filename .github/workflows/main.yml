@@ -1,21 +1,48 @@
-name: Celsius Mage Engine
+name: Celsius Mage Engine (UESP-PRCE)
+
 on:
+  workflow_dispatch:
+    inputs:
+      puter_link:
+        description: 'Puter.js Solid Link'
+        required: true
+      user_command:
+        description: 'Command'
+        default: 'Grammy Standard'
   repository_dispatch:
-    types: [ignite_diagnostic, ignite_mastering]
+    types: [ignite_mastering]
 
 jobs:
-  process:
+  mastering_circuit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Setup Tools
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Generate Traceability Metadata
+        id: meta
         run: |
-          sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install requests pydub yt-dlp
-      - name: Execute Engine
+          # Generate ISO 8601 Timestamp & Unique Session ID
+          echo "TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          # Generate a unique ID if one wasn't passed by WordPress
+          if [ -z "${{ github.event.client_payload.session_id }}" ]; then
+            echo "SESSION_ID=CELS-$(date +%s%N)" >> $GITHUB_ENV
+          else
+            echo "SESSION_ID=${{ github.event.client_payload.session_id }}" >> $GITHUB_ENV
+          fi
+
+      - name: Setup Python & Dependencies
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Execute Dimensional Overwrite
         env:
-          MAGE_MODE: ${{ github.event.event_type == 'ignite_mastering' && 'master' || 'diagnostic' }}
-          WE_LINK: ${{ github.event.client_payload.we_link }}
-          SESSION_ID: ${{ github.event.client_payload.session_id }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: python mastering_logic.py
+          # The Python script now inherits these from the environment
+          MAGE_TIMESTAMP: ${{ env.TIMESTAMP }}
+          MAGE_SESSION_ID: ${{ env.SESSION_ID }}
+        run: |
+          python engine.py \
+            --link "${{ github.event.inputs.puter_link || github.event.client_payload.puter_link }}" \
+            --command "${{ github.event.inputs.user_command || github.event.client_payload.user_command }}"

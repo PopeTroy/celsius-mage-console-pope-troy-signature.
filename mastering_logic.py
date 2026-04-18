@@ -20,11 +20,10 @@ def get_brus_quantum_math():
     system_prompt = (
         "You are the PRCE Quantum Sound Engineer. Use the Brus Equation to master audio. "
         "Logic: d=Bandwidth, Eg=Fundamental, mu=Harmonic Density, E(d)=Brightness. "
-        "Calculate a 'Blue Shift' for mobile optimization (d-low) if requested. "
         "Provide ONLY a valid FFmpeg filter string using: loudnorm, compand, equalizer, crystalizer. "
         "Target -14 LUFS. No prose. Standard filters only."
     )
-    user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Prophetic Goal: {USER_CMD}. Apply Nano-Scaling & Frequency Bandwidth Analysis."
+    user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Prophetic Goal: {USER_CMD}. Apply Nano-Scaling."
     
     try:
         completion = client.chat.completions.create(
@@ -33,20 +32,17 @@ def get_brus_quantum_math():
             temperature=0.1
         )
         math = completion.choices[0].message.content.strip()
-        # Clean for FFmpeg execution safety
         return math.replace('"', '').replace('`', '').replace(';', ',')
     except Exception:
-        # Safe Fallback: Standard PRCE Curve
         return "equalizer=f=60:width_type=h:w=1:g=-2,equalizer=f=12000:width_type=h:w=2:g=1.5,loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():
-    print("--- SCANNING FOR RAW SIGNAL (BRUS-FREQ MODE) ---")
+    print("--- SCANNING FOR RAW SIGNAL ---")
     supported_formats = ('.wav', '.mp3', '.m4a', '.flac')
     input_file = None
 
     for file in os.listdir('.'):
-        file_lower = file.lower()
-        if file_lower.endswith(supported_formats) and "master" not in file_lower:
+        if file.lower().endswith(supported_formats) and "master" not in file.lower():
             input_file = file
             print(f"SIGNAL ACQUIRED: {input_file}")
             break
@@ -56,8 +52,6 @@ def execute_circuit():
         return
 
     math = get_brus_quantum_math()
-    print(f"PRCE Quantum Chain: {math}")
-
     output_name = f"{ARTIST} - {SONG} (Signature Master).mp3"
     
     cmd = [
@@ -71,7 +65,6 @@ def execute_circuit():
     try:
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError:
-        print("Quantum Chain Collapse. Reverting to Safe Confinement...")
         subprocess.run(["ffmpeg", "-y", "-i", input_file, "-af", "loudnorm=I=-14", "-b:a", "320k", output_name], check=True)
 
     if os.path.exists(output_name):

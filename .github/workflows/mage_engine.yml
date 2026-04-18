@@ -7,11 +7,11 @@ on:
       artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
       song_title: { description: 'Song', required: true, default: 'Pergamum' }
       producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
-      user_command: { description: 'Prophetic Goal / Brus Logic', required: true }
+      user_command: { description: 'Prophetic Goal', required: true }
 
 jobs:
   run_circuit:
-    name: "Execute UESP PRCE Master"
+    name: "Execute PRCE Master"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -21,42 +21,37 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
           ref: main
-          fetch-depth: 0
 
       - name: Studio Setup
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install requests groq python-control
+          pip install requests groq
 
-      - name: Set Variables
-        run: |
-          echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          echo "ARTIST=${{ github.event.inputs.artist_name }}" >> $GITHUB_ENV
-          echo "SONG=${{ github.event.inputs.song_title }}" >> $GITHUB_ENV
-          echo "USER_COMMAND=${{ github.event.inputs.user_command }}" >> $GITHUB_ENV
-
-      - name: Execute Expert Master
+      - name: Execute Master
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          MAGE_TIMESTAMP: ${{ github.event.repository.updated_at }}
+          ARTIST: ${{ github.event.inputs.artist_name }}
+          SONG: ${{ github.event.inputs.song_title }}
+          USER_COMMAND: ${{ github.event.inputs.user_command }}
         run: python mastering_logic.py
 
-      - name: Authenticated Sovereignty Push
+      - name: Push to Repository
         env:
           MY_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           
-          # Force the remote to use the PAT secret to eliminate 403 Forbidden errors
+          # Force the remote to use the PAT for sovereignty push
           git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
           
           git add latest_session.json
-          git add -f "*.mp3" || echo "No audio files generated"
+          git add -f "*.mp3" || echo "No audio generated"
           
-          # Only commit and push if the AI logic actually produced a new file or session update
           if ! git diff --cached --quiet; then
-            git commit -m "Master Published: $ARTIST - $SONG [PRCE V12]"
+            git commit -m "Master Published: $ARTIST - $SONG [Brus-Freq Mode]"
             git push origin main
           else
-            echo "No changes detected in the circuit. Skipping push."
+            echo "No changes found."
           fi

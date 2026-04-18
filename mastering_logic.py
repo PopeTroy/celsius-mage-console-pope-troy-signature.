@@ -33,8 +33,10 @@ def get_brus_quantum_math():
             temperature=0.1
         )
         math = completion.choices[0].message.content.strip()
+        # Clean for FFmpeg execution safety
         return math.replace('"', '').replace('`', '').replace(';', ',')
     except Exception:
+        # Safe Fallback: Standard PRCE Curve
         return "equalizer=f=60:width_type=h:w=1:g=-2,equalizer=f=12000:width_type=h:w=2:g=1.5,loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():

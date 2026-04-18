@@ -16,54 +16,76 @@ RAW_BASE_URL = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/"
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 def get_brus_quantum_math():
-    """UESP PRCE: Brus-Frequency Mastering Logic."""
+    """
+    UESP PRCE: Brus-Frequency Mastering Logic.
+    Translates Quantum Confinement into DSP Filter Strings.
+    """
     system_prompt = (
-        "You are the PRCE Quantum Sound Engineer. Use Brus Equation Logic (d=Bandwidth, Eg=Fundamental, mu=Harmonic Density). "
-        "Calculate a 'Blue Shift' for mobile optimization. Provide ONLY a valid FFmpeg filter string. "
-        "Use: loudnorm, compand, equalizer, crystalizer. Target -14 LUFS. No prose."
+        "You are the PRCE Quantum Sound Engineer. Use the Brus Equation to master audio. "
+        "Logic: d=Bandwidth, Eg=Fundamental, mu=Harmonic Density, E(d)=Brightness. "
+        "Calculate a 'Blue Shift' for mobile optimization (d-low) if requested. "
+        "Provide ONLY a valid FFmpeg filter string using: loudnorm, compand, equalizer, crystalizer. "
+        "Target -14 LUFS. No prose. Standard filters only."
     )
-    user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Goal: {USER_CMD}. Apply Nano-Scaling Analysis."
+    # Injecting the Brus-specific prompt variables
+    user_prompt = f"Artist: {ARTIST}. Song: {SONG}. Prophetic Goal: {USER_CMD}. Apply Nano-Scaling & Frequency Bandwidth Analysis."
     
     try:
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}],
+            messages=[
+                {"role": "system", "content": system_prompt}, 
+                {"role": "user", "content": user_prompt}
+            ],
             temperature=0.1
         )
-        return completion.choices[0].message.content.strip().replace('"', '').replace('`', '').replace(';', ',')
+        math = completion.choices[0].message.content.strip()
+        # Clean for FFmpeg execution safety
+        return math.replace('"', '').replace('`', '').replace(';', ',')
     except Exception:
-        return "loudnorm=I=-14:TP=-1.5:LRA=11"
+        # Safe Fallback: Standard PRCE Curve
+        return "equalizer=f=60:width_type=h:w=1:g=-2,equalizer=f=12000:width_type=h:w=2:g=1.5,loudnorm=I=-14:TP=-1.5:LRA=11"
 
 def execute_circuit():
-    print("--- SCANNING FOR RAW SIGNAL ---")
+    print("--- SCANNING FOR RAW SIGNAL (BRUS-FREQ MODE) ---")
     supported_formats = ('.wav', '.mp3', '.m4a', '.flac')
     input_file = None
 
     for file in os.listdir('.'):
-        if file.lower().endswith(supported_formats) and "master" not in file.lower():
+        file_lower = file.lower()
+        if file_lower.endswith(supported_formats) and "master" not in file_lower:
             input_file = file
+            print(f"SIGNAL ACQUIRED: {input_file}")
             break
 
     if not input_file:
-        print("CRITICAL: No input signal.")
+        print("CRITICAL: Signal Acquisition Failed.")
         return
 
+    # 1. Generate Brus Shift Math
     math = get_brus_quantum_math()
+    print(f"PRCE Quantum Chain: {math}")
+
+    # 2. Render Signature Master
     output_name = f"{ARTIST} - {SONG} (Signature Master).mp3"
     
+    # Logic: 320k LAME Encoding with Apex Transient Overwrite
     cmd = [
         "ffmpeg", "-y", "-i", input_file,
         "-af", math,
         "-codec:a", "libmp3lame", "-b:a", "320k",
-        "-metadata", f"title={SONG}", "-metadata", f"artist={ARTIST}",
+        "-metadata", f"title={SONG}",
+        "-metadata", f"artist={ARTIST}",
         output_name
     ]
     
     try:
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError:
+        print("Quantum Chain Collapse. Reverting to Safe Confinement...")
         subprocess.run(["ffmpeg", "-y", "-i", input_file, "-af", "loudnorm=I=-14", "-b:a", "320k", output_name], check=True)
 
+    # 3. Finalize Session Registry
     if os.path.exists(output_name):
         url_safe_name = output_name.replace(" ", "%20")
         live_entry = {
@@ -71,13 +93,12 @@ def execute_circuit():
             "artist": ARTIST,
             "song": SONG,
             "status": "POPE TROY SIGNATURE MASTER COMPLETE",
-            "engine": "PRCE V12 Brus-Frequency",
+            "engine": "PRCE V12 (Brus-Frequency)",
             "download_url": f"{RAW_BASE_URL}{url_safe_name}"
         }
         with open('latest_session.json', 'w') as f:
             json.dump(live_entry, f, indent=4)
+        print(f"SUCCESS: {output_name} published to Celsius Cloud.")
 
-if __name__ == "__main__":
-    execute_circuit()
 if __name__ == "__main__":
     execute_circuit()

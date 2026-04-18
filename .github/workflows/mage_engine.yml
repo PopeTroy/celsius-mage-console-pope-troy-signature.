@@ -7,40 +7,51 @@ on:
       artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
       song_title: { description: 'Song', required: true, default: 'Pergamum' }
       producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
-      user_command: { description: 'Prophetic Goal', required: true }
+      user_command: { description: 'Prophetic Goal / Brus Logic', required: true }
 
 jobs:
   run_circuit:
-    name: "Execute PRCE Master"
+    name: "Execute UESP PRCE Master"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
+          ref: main
 
-      - name: Studio Setup
+      - name: Studio Setup (Feedback Loop Stack)
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install requests groq
+          pip install requests groq python-control river
 
-      - name: Execute Master
+      - name: Execute Master (PRCE Logic)
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          MAGE_TIMESTAMP: ${{ github.event.repository.updated_at }}
           ARTIST: ${{ github.event.inputs.artist_name }}
           SONG: ${{ github.event.inputs.song_title }}
           USER_COMMAND: ${{ github.event.inputs.user_command }}
-          MAGE_TIMESTAMP: ${{ github.event.repository.updated_at }}
         run: python mastering_logic.py
 
-      - name: Push Master
+      - name: Sovereignty Push
         env:
           MY_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
+          
+          # This forces the repo to trace the PAT for write access
           git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
+          
           git add latest_session.json
-          git add -f "*.mp3" || echo "No audio"
-          git commit -m "Master Published: ${{ github.event.inputs.song_title }}" || echo "No changes"
-          git push origin main
+          git add -f "*.mp3" || echo "No masters found"
+          
+          if ! git diff --cached --quiet; then
+            git commit -m "Master Published: $ARTIST - $SONG [UESP Feedback Active]"
+            git push origin main
+          else
+            echo "No changes in circuit resonance."
+          fi

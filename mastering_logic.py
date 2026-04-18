@@ -1,7 +1,7 @@
 import os
 import json
 import subprocess
-import control as ct  # Core Feedback Loop
+import control as ct
 from river import anomaly
 from groq import Groq
 
@@ -16,7 +16,6 @@ REPO = "celsius-mage-console-pope-troy-signature"
 RAW_BASE_URL = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/"
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
-# River Diagnostic: Monitoring Frequency Anomalies
 half_space_detector = anomaly.HalfSpaceTrees()
 
 def get_brus_quantum_math():
@@ -48,7 +47,6 @@ def execute_circuit():
         print("CRITICAL: Signal Acquisition Failed.")
         return
 
-    # Real-Time Diagnostic (River Learning)
     half_space_detector.learn_one({'signal_hash': len(ARTIST + SONG)})
     
     math = get_brus_quantum_math()

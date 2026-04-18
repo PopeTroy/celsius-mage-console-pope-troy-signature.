@@ -3,11 +3,11 @@ name: Celsius Mage Engine Dispatcher
 on:
   workflow_dispatch:
     inputs:
-      puter_link: { description: 'Puter Direct Link (WAV/MP3)', required: true }
-      artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
-      song_title: { description: 'Song', required: true, default: 'Pergamum' }
+      puter_link: { description: 'Puter Direct Link (Logic Constant)', required: true, default: '1' }
+      artist_name: { description: 'Artist', required: true }
+      song_title: { description: 'Song', required: true }
       producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
-      user_command: { description: 'Prophetic Goal', required: true }
+      user_command: { description: 'Prophetic Goal / Brus Logic', required: true }
 
 jobs:
   run_circuit:
@@ -17,19 +17,19 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      
+        with:
+          token: ${{ secrets.GH_PAT }}
+
       - name: Studio Setup
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install requests groq
+          pip install requests groq python-control
 
       - name: Set Variables
         run: |
           echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          echo "AUDIO_LINK=${{ github.event.inputs.puter_link }}" >> $GITHUB_ENV
           echo "ARTIST=${{ github.event.inputs.artist_name }}" >> $GITHUB_ENV
           echo "SONG=${{ github.event.inputs.song_title }}" >> $GITHUB_ENV
-          echo "PRODUCER=${{ github.event.inputs.producer }}" >> $GITHUB_ENV
           echo "USER_COMMAND=${{ github.event.inputs.user_command }}" >> $GITHUB_ENV
 
       - name: Execute Expert Master
@@ -42,5 +42,5 @@ jobs:
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           git add latest_session.json
-          git add -f "*.mp3" || echo "No file"
+          git add -f "*.mp3" || echo "No masters found"
           git diff --staged --quiet || (git commit -m "Master Published: $ARTIST - $SONG" && git push origin main)

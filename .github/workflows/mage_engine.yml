@@ -1,60 +1,49 @@
-name: Celsius Mage Engine Dispatcher
-
+name: UESP Resonance Sync
 on:
+  schedule:
+    - cron: '*/30 * * * *'
   workflow_dispatch:
-    inputs:
-      puter_link: { description: 'Logic Constant', required: true, default: '1' }
-      artist_name: { description: 'Artist', required: true }
-      song_title: { description: 'Song', required: true }
-      producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
-      user_command: { description: 'Prophetic Goal / Brus Logic', required: true }
-
 jobs:
-  run_circuit:
-    name: "Execute UESP PRCE Master"
+  sync:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          token: ${{ secrets.GH_PAT }}
-          fetch-depth: 0
+          python-version: '3.11'
 
-      - name: Studio Setup
-        run: |
-          sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install requests groq python-control
+      - name: Install AI Hive Dependencies
+        run: pip install -r requirements.txt
 
-      - name: Set Variables
-        run: |
-          echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          echo "ARTIST=${{ github.event.inputs.artist_name }}" >> $GITHUB_ENV
-          echo "SONG=${{ github.event.inputs.song_title }}" >> $GITHUB_ENV
-          echo "USER_COMMAND=${{ github.event.inputs.user_command }}" >> $GITHUB_ENV
-
-      - name: Execute Expert Master
+      - name: Execute SHI Ingestor
         env:
+          GH_PAT: ${{ secrets.GH_PAT }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        run: python mastering_logic.py
+          NASA_DONKI_KEY: ${{ secrets.NASA_DONKI_KEY }}
+          OPEN_WEATHER_KEY: ${{ secrets.OPEN_WEATHER_KEY }}
+          RAPID_API_KEY: ${{ secrets.RAPID_API_KEY }}
+          USDA_API_KEY: ${{ secrets.USDA_API_KEY }}
+        run: python ingestor.py
 
-      - name: Authenticated Sovereignty Push
-        env:
-          MY_PAT: ${{ secrets.GH_PAT }}
+      - name: Push Dimensional Update
         run: |
-          git config --global user.name "PopeTroy"
-          git config --global user.email "bot@celsiusmediagroup.co.za"
+          git config --global user.name 'SHI-Bot'
+          git config --global user.email 'bot@celsiusmediagroup.co.za'
           
-          # Force the remote to use the PAT for authentication to clear 403 errors
-          git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
-          
-          git add latest_session.json
-          git add -f "*.mp3" || echo "No masters found to add"
-          
-          if ! git diff --cached --quiet; then
-            git commit -m "Master Published: $ARTIST - $SONG [Brus-Freq Mode]"
-            git push origin main
+          # Check if the file was actually created
+          if [ -f faimm-logic.json ]; then
+            git add faimm-logic.json
+            
+            # Only commit if there are changes to avoid Exit Code 1
+            if git diff --staged --quiet; then
+              echo "No changes detected in resonance. Skipping commit."
+            else
+              git commit -m "SHI Pulse: $(date)"
+              git push
+            fi
           else
-            echo "No changes to commit."
+            echo "ERROR: faimm-logic.json not found! Check ingestor.py logs."
+            exit 1
           fi

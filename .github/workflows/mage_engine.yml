@@ -43,7 +43,7 @@ jobs:
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           
-          # Force the remote to use the PAT for sovereignty push
+          # This line forces the engine to use your PAT for the push, clearing the 403 error
           git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
           
           git add latest_session.json

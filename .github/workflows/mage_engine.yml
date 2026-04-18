@@ -3,11 +3,11 @@ name: Celsius Mage Engine Dispatcher
 on:
   workflow_dispatch:
     inputs:
-      puter_link: { description: 'Puter Direct Link (WAV/MP3)', required: true }
+      puter_link: { description: 'Logic Constant', required: true, default: '1' }
       artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
       song_title: { description: 'Song', required: true, default: 'Pergamum' }
       producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
-      user_command: { description: 'Prophetic Goal', required: true }
+      user_command: { description: 'Prophetic Goal / Brus Logic', required: true }
 
 jobs:
   run_circuit:
@@ -16,14 +16,17 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_PAT }} # Using your repo secret for write access
+          token: ${{ secrets.GH_PAT }}
+          ref: main
+          fetch-depth: 0
 
       - name: Studio Setup
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install requests groq
+          pip install requests groq python-control
 
       - name: Set Variables
         run: |
@@ -37,16 +40,23 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python mastering_logic.py
 
-            - name: Push to Repository
+      - name: Authenticated Sovereignty Push
         env:
           MY_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           
-          # Force the remote to use your PAT for the push
+          # Force the remote to use the PAT secret to eliminate 403 Forbidden errors
           git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
           
           git add latest_session.json
-          git add -f "*.mp3" || echo "No files"
-          git diff --staged --quiet || (git commit -m "Master Published: $ARTIST - $SONG" && git push origin main)
+          git add -f "*.mp3" || echo "No audio files generated"
+          
+          # Only commit and push if the AI logic actually produced a new file or session update
+          if ! git diff --cached --quiet; then
+            git commit -m "Master Published: $ARTIST - $SONG [PRCE V12]"
+            git push origin main
+          else
+            echo "No changes detected in the circuit. Skipping push."
+          fi

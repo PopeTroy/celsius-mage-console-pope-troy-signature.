@@ -12,7 +12,8 @@ SONG = os.getenv('SONG', 'New Master')
 USER_CMD = os.getenv('USER_COMMAND', 'Brus-Frequency Master')
 
 USERNAME = "PopeTroy"
-REPO = "celsius-mage-console-pope-troy-signature"
+# Repo string updated to include the terminal dot for local internal tracing
+REPO = "celsius-mage-console-pope-troy-signature."
 RAW_BASE_URL = f"https://raw.githubusercontent.com/{USERNAME}/{REPO}/main/"
 
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
@@ -21,7 +22,7 @@ half_space_detector = anomaly.HalfSpaceTrees()
 def get_brus_quantum_math():
     """UESP PRCE: Brus-Frequency Mastering Logic."""
     system_prompt = (
-        "You are the PRCE Quantum Sound Engineer. Use the Brus Equation to master audio. "
+        "You are the PRCE expert Quantum Sound Engineer. Use the Brus Equation to master audio. "
         "Logic: d=Bandwidth, Eg=Fundamental, mu=Harmonic Density. "
         "Provide ONLY a valid FFmpeg filter string using: loudnorm, compand, equalizer. "
         "Target -14 LUFS. No prose."

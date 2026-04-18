@@ -37,10 +37,16 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python mastering_logic.py
 
-      - name: Push to Repository
+            - name: Push to Repository
+        env:
+          MY_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
+          
+          # Force the remote to use your PAT for the push
+          git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
+          
           git add latest_session.json
-          git add -f "*.mp3" || echo "No files to add"
+          git add -f "*.mp3" || echo "No files"
           git diff --staged --quiet || (git commit -m "Master Published: $ARTIST - $SONG" && git push origin main)

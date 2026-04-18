@@ -1,13 +1,20 @@
 name: UESP Resonance Sync
+
 on:
   schedule:
     - cron: '*/30 * * * *'
   workflow_dispatch:
+
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          ref: patch1 # Explicitly target the patch1 branch
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -15,7 +22,9 @@ jobs:
           python-version: '3.11'
 
       - name: Install AI Hive Dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install requests groq python-control
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Execute SHI Ingestor
         env:
@@ -27,23 +36,27 @@ jobs:
           USDA_API_KEY: ${{ secrets.USDA_API_KEY }}
         run: python ingestor.py
 
-      - name: Push Dimensional Update
+      - name: Authenticated Sovereignty Push
+        env:
+          MY_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name 'SHI-Bot'
           git config --global user.email 'bot@celsiusmediagroup.co.za'
           
-          # Check if the file was actually created
+          # Force the remote to use the PAT and target patch1
+          git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
+          
           if [ -f faimm-logic.json ]; then
             git add faimm-logic.json
             
-            # Only commit if there are changes to avoid Exit Code 1
+            # Check for changes to avoid Exit Code 1 (the 'no changes' error)
             if git diff --staged --quiet; then
-              echo "No changes detected in resonance. Skipping commit."
+              echo "Resonance stable. No changes."
             else
-              git commit -m "SHI Pulse: $(date)"
-              git push
+              git commit -m "SHI Pulse: $(date) [patch1]"
+              git push origin patch1 
             fi
           else
-            echo "ERROR: faimm-logic.json not found! Check ingestor.py logs."
+            echo "CRITICAL: faimm-logic.json missing."
             exit 1
           fi

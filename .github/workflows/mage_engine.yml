@@ -43,14 +43,14 @@ jobs:
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
           
-          # Refined Remote URL: Removing trailing slash and forcing token auth
-          git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature
+          # Logic: If the repo ends in a dot, the .git suffix is required for the push to resolve.
+          git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature..git
           
           git add latest_session.json
           git add -f "*.mp3" || echo "No masters found"
           
           if ! git diff --cached --quiet; then
-            git commit -m "Master Published: ${{ github.event.inputs.song_title }} [Feedback Loop Active]"
+            git commit -m "Master Published: ${{ github.event.inputs.song_title }} [UESP Feedback Active]"
             git push origin main
           else
             echo "No changes in circuit resonance."

@@ -3,7 +3,7 @@ name: Celsius Mage Engine Dispatcher
 on:
   workflow_dispatch:
     inputs:
-      puter_link: { description: 'Puter Direct Link (WAV/MP3)', required: true }
+      puter_link: { description: 'Logic Constant', required: true, default: '1' }
       artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
       song_title: { description: 'Song', required: true, default: 'Pergamum' }
       producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
@@ -11,36 +11,36 @@ on:
 
 jobs:
   run_circuit:
-    name: "Execute UESP PRCE Master"
+    name: "Execute PRCE Master"
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_PAT }} # Using your repo secret for write access
+          token: ${{ secrets.GH_PAT }}
 
       - name: Studio Setup
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests groq
 
-      - name: Set Variables
-        run: |
-          echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
-          echo "ARTIST=${{ github.event.inputs.artist_name }}" >> $GITHUB_ENV
-          echo "SONG=${{ github.event.inputs.song_title }}" >> $GITHUB_ENV
-          echo "USER_COMMAND=${{ github.event.inputs.user_command }}" >> $GITHUB_ENV
-
-      - name: Execute Expert Master
+      - name: Execute Master
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          ARTIST: ${{ github.event.inputs.artist_name }}
+          SONG: ${{ github.event.inputs.song_title }}
+          USER_COMMAND: ${{ github.event.inputs.user_command }}
+          MAGE_TIMESTAMP: ${{ github.event.repository.updated_at }}
         run: python mastering_logic.py
 
-      - name: Push to Repository
+      - name: Push Master
+        env:
+          MY_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
+          git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
           git add latest_session.json
-          git add -f "*.mp3" || echo "No files to add"
-          git diff --staged --quiet || (git commit -m "Master Published: $ARTIST - $SONG" && git push origin main)
+          git add -f "*.mp3" || echo "No audio"
+          git commit -m "Master Published: ${{ github.event.inputs.song_title }}" || echo "No changes"
+          git push origin main

@@ -3,11 +3,11 @@ name: Celsius Mage Engine Dispatcher
 on:
   workflow_dispatch:
     inputs:
-      puter_link: { description: 'Logic Constant', required: true, default: '1' }
-      artist_name: { description: 'Artist', required: true }
-      song_title: { description: 'Song', required: true }
+      puter_link: { description: 'Puter Direct Link (WAV/MP3)', required: true }
+      artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
+      song_title: { description: 'Song', required: true, default: 'Pergamum' }
       producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
-      user_command: { description: 'Prophetic Goal / Brus Logic', required: true }
+      user_command: { description: 'Prophetic Goal', required: true }
 
 jobs:
   run_circuit:
@@ -16,42 +16,31 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_PAT }}
-          ref: main
+          token: ${{ secrets.GH_PAT }} # Using your repo secret for write access
 
       - name: Studio Setup
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
           pip install requests groq
 
+      - name: Set Variables
+        run: |
+          echo "MAGE_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_ENV
+          echo "ARTIST=${{ github.event.inputs.artist_name }}" >> $GITHUB_ENV
+          echo "SONG=${{ github.event.inputs.song_title }}" >> $GITHUB_ENV
+          echo "USER_COMMAND=${{ github.event.inputs.user_command }}" >> $GITHUB_ENV
+
       - name: Execute Expert Master
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          MAGE_TIMESTAMP: ${{ github.event.repository.updated_at }}
-          ARTIST: ${{ github.event.inputs.artist_name }}
-          SONG: ${{ github.event.inputs.song_title }}
-          USER_COMMAND: ${{ github.event.inputs.user_command }}
         run: python mastering_logic.py
 
-      - name: Push Master to Repository
-        env:
-          MY_PAT: ${{ secrets.GH_PAT }}
+      - name: Push to Repository
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
-          
-          # Force remote to use PAT to clear the 403 error
-          git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature.git
-          
           git add latest_session.json
           git add -f "*.mp3" || echo "No files to add"
-          
-          if ! git diff --cached --quiet; then
-            git commit -m "Master Published: $ARTIST - $SONG [Main Branch Ignition]"
-            git push origin main
-          else
-            echo "No changes to push."
-          fi
+          git diff --staged --quiet || (git commit -m "Master Published: $ARTIST - $SONG" && git push origin main)

@@ -3,9 +3,10 @@ name: Celsius Mage Engine (Daikokuten Shadow Clone Swarm)
 on:
   workflow_dispatch:
     inputs:
-      artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
-      song_title: { description: 'Song', required: true, default: 'Pergamum' }
-      user_command: { description: 'Daikokuten Trigger', required: true }
+      artist_name: { description: 'Artist Identity', required: true, default: 'Pope Troy' }
+      song_title: { description: 'Song Title', required: true, default: 'Pergamum' }
+      producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
+      user_command: { description: 'Prophetic Goal / Swarm Trigger', required: true }
 
 jobs:
   run_circuit:
@@ -14,21 +15,22 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout Code
+      - name: Checkout Code (Sovereignty Handshake)
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
           ref: main
 
-      - name: Studio Setup (NVIDIA AI Swarm Stack)
+      - name: Studio Setup (NVIDIA AI & Feedback Stack)
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
+          # 'control' and 'river' for diagnostics, 'nvidia-pyindex' for potential NIM scaling
           pip install requests groq control river nvidia-pyindex 
 
-      - name: Execute Shadow Clone Master
+      - name: Execute Daikokuten Master (80 Shadow Clones)
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          NVIDIA_API_KEY: ${{ secrets.NVIDIA_SECRET }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_SECRET }} # The Nvidia AI Bridge
           MAGE_TIMESTAMP: ${{ github.event.repository.updated_at }}
           ARTIST: ${{ github.event.inputs.artist_name }}
           SONG: ${{ github.event.inputs.song_title }}
@@ -41,10 +43,16 @@ jobs:
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
+          
+          # Force the remote to acknowledge the terminal dot in the repository name
           git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature..git
+          
           git add latest_session.json
-          git add -f "*.mp3" || echo "No masters"
+          git add -f "*.mp3" || echo "No masters acquired."
+          
           if ! git diff --cached --quiet; then
-            git commit -m "Daikokuten Swarm Master: $ARTIST - $SONG"
+            git commit -m "Daikokuten Master Published: ${{ github.event.inputs.song_title }} [80 AI Clones Active]"
             git push origin main
+          else
+            echo "No changes in circuit resonance. Swarm complete."
           fi

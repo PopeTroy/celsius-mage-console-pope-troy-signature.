@@ -1,17 +1,15 @@
-name: Celsius Mage Engine Dispatcher
+name: Celsius Mage Engine (Daikokuten Shadow Clone Swarm)
 
 on:
   workflow_dispatch:
     inputs:
-      puter_link: { description: 'Logic Constant', required: true, default: '1' }
       artist_name: { description: 'Artist', required: true, default: 'Pope Troy' }
       song_title: { description: 'Song', required: true, default: 'Pergamum' }
-      producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
-      user_command: { description: 'Prophetic Goal / Brus Logic', required: true }
+      user_command: { description: 'Daikokuten Trigger', required: true }
 
 jobs:
   run_circuit:
-    name: "Execute UESP PRCE Master"
+    name: "Execute NVIDIA PRCE Swarm"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -22,14 +20,15 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           ref: main
 
-      - name: Studio Setup (Feedback Loop Stack)
+      - name: Studio Setup (NVIDIA AI Swarm Stack)
         run: |
           sudo apt-get update && sudo apt-get install -y ffmpeg
-          pip install requests groq control river 
+          pip install requests groq control river nvidia-pyindex 
 
-      - name: Execute Master (PRCE Logic)
+      - name: Execute Shadow Clone Master
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_SECRET }}
           MAGE_TIMESTAMP: ${{ github.event.repository.updated_at }}
           ARTIST: ${{ github.event.inputs.artist_name }}
           SONG: ${{ github.event.inputs.song_title }}
@@ -42,16 +41,10 @@ jobs:
         run: |
           git config --global user.name "PopeTroy"
           git config --global user.email "bot@celsiusmediagroup.co.za"
-          
-          # Logic: If the repo ends in a dot, the .git suffix is required for the push to resolve.
           git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature..git
-          
           git add latest_session.json
-          git add -f "*.mp3" || echo "No masters found"
-          
+          git add -f "*.mp3" || echo "No masters"
           if ! git diff --cached --quiet; then
-            git commit -m "Master Published: ${{ github.event.inputs.song_title }} [UESP Feedback Active]"
+            git commit -m "Daikokuten Swarm Master: $ARTIST - $SONG"
             git push origin main
-          else
-            echo "No changes in circuit resonance."
           fi

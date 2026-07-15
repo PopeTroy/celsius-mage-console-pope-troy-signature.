@@ -1,9 +1,10 @@
 {
-    "timestamp": "2026-05-02T11:40:06Z",
+    "session_id": "acd4e16f-d1df-40bc-a121-d787da155673",
+    "timestamp": "2026-07-15T11:58:01Z",
     "artist": "Pope Troy",
-    "song": "Need For Thought",
-    "status": "DAIKOKUTEN SWARM MASTER COMPLETE",
+    "song": "Holy Ghost Flame",
+    "status": "SAFE_CONFINEMENT_FALLBACK_COMPLETE",
     "clones_active": 80,
     "engine": "PRCE v12 (Nvidia AI Enhanced)",
-    "download_url": "https://raw.githubusercontent.com/PopeTroy/celsius-mage-console-pope-troy-signature./main/Pope%20Troy%20-%20Need%20For%20Thought%20(Daikokuten%20Master).mp3"
+    "download_url": "https://raw.githubusercontent.com/PopeTroy/celsius-mage-console-pope-troy-signature./main/Pope%20Troy%20-%20Holy%20Ghost%20Flame%20(Daikokuten%20Master).mp3"
 }

@@ -7,6 +7,10 @@ on:
       song_title: { description: 'Song Title', required: true, default: 'Pergamum' }
       producer: { description: 'Producer', required: true, default: 'Celsius Media Group' }
       user_command: { description: 'Prophetic Goal / Swarm Trigger', required: true }
+  
+  # External API Trigger Endpoint for WordPress AJAX
+  repository_dispatch:
+    types: [celsius_trigger_mastering]
 
 jobs:
   run_circuit:
@@ -32,15 +36,15 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_SECRET }} # The Nvidia AI Bridge
           MAGE_TIMESTAMP: ${{ github.event.repository.updated_at }}
-          ARTIST: ${{ github.event.inputs.artist_name }}
-          SONG: ${{ github.event.inputs.song_title }}
-          USER_COMMAND: ${{ github.event.inputs.user_command }}
+          ARTIST: ${{ github.event.inputs.artist_name || github.event.client_payload.artist_name }}
+          SONG: ${{ github.event.inputs.song_title || github.event.client_payload.song_title }}
+          USER_COMMAND: ${{ github.event.inputs.user_command || github.event.client_payload.user_command }}
         run: python mastering_logic.py
 
       - name: Upload Mastered Audio & Audit Ledger as Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Daikokuten-Master-${{ github.event.inputs.artist_name }}-${{ github.event.inputs.song_title }}
+          name: Daikokuten-Master-${{ github.event.inputs.artist_name || github.event.client_payload.artist_name }}-${{ github.event.inputs.song_title || github.event.client_payload.song_title }}
           path: |
             *.mp3
             latest_session.json

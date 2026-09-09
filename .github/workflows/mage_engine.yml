@@ -37,22 +37,12 @@ jobs:
           USER_COMMAND: ${{ github.event.inputs.user_command }}
         run: python mastering_logic.py
 
-      - name: Sovereignty Push
-        env:
-          MY_PAT: ${{ secrets.GH_PAT }}
-        run: |
-          git config --global user.name "PopeTroy"
-          git config --global user.email "bot@celsiusmediagroup.co.za"
-          
-          # Force the remote to acknowledge the terminal dot in the repository name
-          git remote set-url origin https://x-access-token:${MY_PAT}@github.com/PopeTroy/celsius-mage-console-pope-troy-signature..git
-          
-          git add latest_session.json
-          git add -f "*.mp3" || echo "No masters acquired."
-          
-          if ! git diff --cached --quiet; then
-            git commit -m "Daikokuten Master Published: ${{ github.event.inputs.song_title }} [80 AI Clones Active]"
-            git push origin main
-          else
-            echo "No changes in circuit resonance. Swarm complete."
-          fi
+      - name: Upload Mastered Audio & Audit Ledger as Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Daikokuten-Master-${{ github.event.inputs.artist_name }}-${{ github.event.inputs.song_title }}
+          path: |
+            *.mp3
+            latest_session.json
+            compliance_audit_ledger.jsonl
+          retention-days: 90

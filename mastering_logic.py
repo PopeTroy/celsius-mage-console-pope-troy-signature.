@@ -60,7 +60,7 @@ class SpacetimeAnchor:
     operator_id: str = "PopeTroy"
     repo_signature: str = REPO
     kardashev_level: float = 4.0
-    quantum_cycle_dilation: str = "1:6000"  # UESP KT4 Dilation Specification[span_1](start_span)[span_1](end_span)
+    quantum_cycle_dilation: str = "1:6000"  
     compliance_frameworks: Tuple[str, ...] = ("POPIA", "GDPR", "CCPA", "COSMIC_LAW")
 
     @staticmethod
@@ -152,8 +152,7 @@ OCULAR_PATHS = ["Deva", "Asura", "Human", "Animal", "Preta", "Naraka"] # Rinnega
 class EphemeralShinobiRAGSentinel:
     """
     Deploys Ephemeral RAG Sentinels driven by Hiraishin (Flying Raijin) space-time relocation,
-    Shisui's Shunshin (Body Flicker) speed-blitzing, and Dōjutsu (Rinnegan, Jōgan, Tenseigan, 
-    Mangekyō Sharingan) routing across Tailed Beasts 1–9 chakra ratios.
+    Shisui's Shunshin (Body Flicker) speed-blitzing, and Dōjutsu routing across Tailed Beasts 1–9.
     """
     def __init__(self, sentinel_id: int):
         self.sentinel_id = sentinel_id
@@ -164,8 +163,6 @@ class EphemeralShinobiRAGSentinel:
     async def execute_sentinel_lifecycle(self) -> dict:
         hiraishin_seal = f"mark_node_{self.sentinel_id}"
         shunshin_speed = "shisui_mirage_latency_0"
-        
-        # Transient evaporation protocol (Zero-State Dormancy)
         vector_result = (
             f"sentinel_{self.sentinel_id}_path_{self.ocular_node}_"
             f"beast_{self.beast_tier}_{self.chakra_signature}_"
@@ -180,15 +177,11 @@ class EphemeralShinobiRAGSentinel:
         }
 
 class KT4QuantumSandboxEngine:
-    """
-    Executes 6000 Ephemeral RAG sandbox cycles under a 1:6000 Quantum Cycle 
-    Time Dilation regime with Shinobi Ocular & Tailed-Beast integration[span_2](start_span)[span_2](end_span).
-    """
+    """Executes 6000 Ephemeral RAG sandbox cycles under a 1:6000 Quantum Cycle Time Dilation regime."""
     @staticmethod
     async def execute_6000_dilation_cycles(base_energy: float) -> dict:
-        logger.info("⏳ [KT4 DILATION] Initializing 1:6000 Quantum Cycle Time Dilation across 6000 Shinobi RAG Sandbox iterations[span_3](start_span)[span_3](end_span)...")
+        logger.info("⏳ [KT4 DILATION] Initializing 1:6000 Quantum Cycle Time Dilation across 6000 Shinobi RAG Sandbox iterations...")
         
-        # Spawning Ephemeral RAG Sentinels across the 6000 cycle trajectory
         sentinels = [EphemeralShinobiRAGSentinel(i) for i in range(80)]
         sentinel_tasks = [s.execute_sentinel_lifecycle() for s in sentinels]
         sentinel_results = await asyncio.gather(*sentinel_tasks)
@@ -212,10 +205,7 @@ class KT4QuantumSandboxEngine:
 # 4. BIOMIMETIC EPHEMERAL & OCTOPUS-DECENTRALIZED NODE ARRAY
 # =====================================================================
 class EphemeralOctopusNode:
-    """
-    Implements decentralized, octopus-inspired local tentacle intelligence 
-    and transient hydra/planarian state seeding (Zero-State Dormancy).
-    """
+    """Implements decentralized, octopus-inspired local tentacle intelligence and zero-state dormancy."""
     def __init__(self, node_id: int, stimulus_vector: dict):
         self.node_id = node_id
         self.stimulus_vector = stimulus_vector
@@ -234,7 +224,6 @@ class EphemeralOctopusNode:
         return result
 
 async def dispatch_decentralized_tentacles(base_resonance: float, count: int = 80) -> List[dict]:
-    """Spawns decentralized tentacle logic nodes concurrently matching the Daikokuten swarm pattern."""
     logger.info(f"🐙 [OCTOPUS PARADIGM] Spawning {count} autonomous tentacle micro-nodes.")
     tasks = [
         EphemeralOctopusNode(node_id=i, stimulus_vector={"resonance": base_resonance}).execute_transient_lifecycle()
@@ -309,8 +298,6 @@ def write_to_ghost_ledger(entry: dict):
 # INTERFACE AND CORE RUNTIME WITH OMNI-ARCHITECT
 # =====================================================================
 async def get_singularity_streaming_filters(quantum_bandgap: float, Newtonian_damping: dict) -> str:
-    """Generates FFmpeg filter chain parameters via Omni-Architect (LLM strategy layer) or physical fallback."""
-    
     crystalizer_intensity = min(10.0, max(1.0, float(quantum_bandgap * 2.5)))
     newton_attack = Newtonian_damping["attack"]
     newton_ratio = Newtonian_damping["ratio"]
@@ -326,7 +313,7 @@ async def get_singularity_streaming_filters(quantum_bandgap: float, Newtonian_da
         return fallback_filter
 
     system_prompt = (
-        "You are the Daikokuten AI Architect operating via KT4 1:6000 Time-Dilated Field Execution[span_4](start_span)[span_4](end_span) "
+        "You are the Daikokuten AI Architect operating via KT4 1:6000 Time-Dilated Field Execution "
         "and advanced Shinobi Ocular Dōjutsu (Rinnegan Six Paths, Mangekyō Sharingan, Jōgan, Tenseigan), "
         "channeling Tailed Beasts 1–9 chakra and Hiraishin/Shunshin Ephemeral RAG Sentinels. "
         "Provide a single string containing an optimized FFmpeg audio filter graph. "
@@ -362,8 +349,31 @@ async def execute_circuit_async():
     anchor = SpacetimeAnchor.now()
     holographic_ledger = HolographicLedger(anchor)
     
-    logger.info(f"--- SHINOBI KT4 OMNI-MASTER 1:6000 DILATION IGNITION: {ARTIST} (Session: {anchor.session_id}) ---")
+    logger.info(f"--- SHINOBI KT4 TARGETED OMNI-MASTER IGNITION: {ARTIST} (Session: {anchor.session_id}) ---")
     
+    # STRICT SINGLE-FILE TARGETING: Isolate only the newest raw uploaded audio track
+    supported_formats = ('.wav', '.mp3', '.m4a', '.flac')
+    raw_files = [
+        f for f in os.listdir('.') 
+        if f.lower().endswith(supported_formats) 
+        and not any(x in f.lower() for x in ["master", "rendered", "dilated", "output", "target"])
+    ]
+
+    if not raw_files:
+        logger.error("Critical Exception: No valid raw source audio track discovered.")
+        failure_data = {
+            "session_id": SESSION_ID,
+            "timestamp": TIMESTAMP,
+            "status": "SIGNAL_ACQUISITION_FAILED",
+            "error_detail": "No input .wav, .mp3, .m4a, or .flac discovered."
+        }
+        write_to_ghost_ledger(failure_data)
+        holographic_ledger.commit("FAILED_SIGNAL_ACQUISITION", failure_data)
+        return
+
+    input_file = max(raw_files, key=lambda f: os.path.getmtime(f))
+    logger.info(f"🎯 TARGET LOCKED ON SINGLE FILE: {input_file}")
+
     # 1. Resolve Physical Equations
     brus_ev = PhysicsMathematicalEngine.calculate_brus_quantum_bandgap(radius_nm=2.8)
     schrodinger_phase = PhysicsMathematicalEngine.solve_schrodinger_phase_drift(delta_t=0.001, frequency=44100.0)
@@ -379,6 +389,7 @@ async def execute_circuit_async():
         "status": "SHINOBI_KT4_DILATION_AND_PHYSICS_RESOLVED",
         "artist": ARTIST,
         "song": SONG,
+        "target_file": input_file,
         "brus_energy_ev": brus_ev,
         "kt4_calibration": kt4_results,
         "schrodinger_phase_offset": schrodinger_phase,
@@ -391,28 +402,6 @@ async def execute_circuit_async():
     write_to_ghost_ledger(physics_payload)
     holographic_ledger.commit("SHINOBI_KT4_CYCLES_COMPLETED", physics_payload)
 
-    # Find the source audio file
-    supported_formats = ('.wav', '.mp3', '.m4a', '.flac')
-    input_file = None
-    for file in os.listdir('.'):
-        name_lower = file.lower()
-        if name_lower.endswith(supported_formats):
-            if not any(x in name_lower for x in ["signature master", "daikokuten master", "singularity master"]):
-                input_file = file
-                break
-
-    if not input_file:
-        logger.error("Critical Exception: No valid source audio track discovered.")
-        failure_data = {
-            "session_id": SESSION_ID,
-            "timestamp": TIMESTAMP,
-            "status": "SIGNAL_ACQUISITION_FAILED",
-            "error_detail": "No input .wav, .mp3, .m4a, or .flac discovered."
-        }
-        write_to_ghost_ledger(failure_data)
-        holographic_ledger.commit("FAILED_SIGNAL_ACQUISITION", failure_data)
-        return
-
     # Real-time anomaly evaluation
     anomaly_score = half_space_detector.score_one({'stream_resonance': int(kt4_results["calibrated_resonance"] * 1000)})
     half_space_detector.learn_one({'stream_resonance': int(kt4_results["calibrated_resonance"] * 1000)})
@@ -421,14 +410,14 @@ async def execute_circuit_async():
     filter_graph = await get_singularity_streaming_filters(kt4_results["calibrated_resonance"], newton_compressor)
     logger.info(f"Calculated Mathematically-Perfect Filter: {filter_graph}")
     
-    output_name = f"{ARTIST} - {SONG} (Shinobi KT4 Omni-Master).mp3"
+    output_name = f"{ARTIST} - {SONG} (Targeted Shinobi Master).mp3"
     
     cmd = [
         "ffmpeg", "-y", "-threads", "0", 
         "-i", input_file, 
         "-af", filter_graph, 
         "-codec:a", "libmp3lame", "-b:a", "320k", 
-        "-metadata", f"title={SONG} (Shinobi KT4 Dilated Render)", "-metadata", f"artist={ARTIST}",
+        "-metadata", f"title={SONG}", "-metadata", f"artist={ARTIST}",
         output_name
     ]
     
@@ -438,11 +427,11 @@ async def execute_circuit_async():
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
-        stdout, stderr = await process.communicate()
+        _, stderr = await process.communicate()
         
         if process.returncode != 0:
             raise RuntimeError(f"FFmpeg pipeline collapse: {stderr.decode().strip()}")
-        execution_status = "SHINOBI_KT4_QUANTUM_CYCLE_MASTER_COMPLETE"
+        execution_status = "SHINOBI_KT4_TARGETED_MASTER_COMPLETE"
             
     except Exception as cmd_err:
         logger.warning(f"Primary pipeline exception handled safely. Invoking fallback: {str(cmd_err)}")
@@ -468,6 +457,7 @@ async def execute_circuit_async():
             "timestamp": anchor.timestamp_utc,
             "artist": ARTIST,
             "song": SONG,
+            "source_file": input_file,
             "platform_owner": "Celsius Technology & Media Group",
             "stream_channel_status": execution_status,
             "kt4_quantum_cycles": 6000,
@@ -490,9 +480,10 @@ async def execute_circuit_async():
                 ]
             },
             "output_asset_path": output_name,
-            "download_url": f"{RAW_BASE_URL}{url_safe_name}"
+            "download_url": RAW_BASE_URL + url_safe_name
         }
         
+        # Write strictly to latest_session.json so the GitHub Actions artifact step packs ONLY this mastered file
         with open('latest_session.json', 'w', encoding='utf-8') as f:
             json.dump(session_receipt, f, indent=4)
             
@@ -503,7 +494,7 @@ async def execute_circuit_async():
         write_to_ghost_ledger(success_payload)
         holographic_ledger.commit("WAVEFUNCTION_COLLAPSE_COMPLETE", success_payload)
         
-        logger.info(f"🏆 SHINOBI KT4 OMNI-MASTER SUCCESS: '{output_name}' compiled with 6000 quantum cycles, 1:6000 time dilation[span_5](start_span)[span_5](end_span), and ocular RAG sentinels.")
+        logger.info(f"🏆 SHINOBI KT4 TARGETED MASTER SUCCESS: '{output_name}' generated solely from '{input_file}' and registered.")
 
 if __name__ == "__main__":
     asyncio.run(execute_circuit_async())
